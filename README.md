@@ -73,12 +73,33 @@ sudo curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/dotpr
    dotproj sync my-project
    ```
 
+### Alternative: Load from Remote Repository
+
+If you have an existing dotproj repository, you can load it directly:
+
+1. **Initialize from remote repository:**
+   ```bash
+   dotproj remote my-project https://github.com/username/my-dotfiles.git
+   ```
+
+2. **Apply the dotfiles to your project:**
+   ```bash
+   dotproj apply my-project
+   ```
+
+3. **Make changes and sync back:**
+   ```bash
+   dotproj save my-project
+   dotproj sync my-project
+   ```
+
 ## 📖 Commands Reference
 
 ### Setup and Initialization
 ```bash
 dotproj setup                    # Install DotProj and add to PATH
-dotproj init <project>           # Initialize a new project
+dotproj init <project>           # Initialize a new project (interactive)
+dotproj remote <project> [url]   # Initialize from a remote dotproj repository
 ```
 
 ### File Management
@@ -140,6 +161,18 @@ dotproj init personal-setup
 # When prompted, enter: .bashrc, .zshrc, .vimrc, .gitconfig
 ```
 
+### Remote Repository Setup
+```bash
+# Initialize from an existing dotproj repository
+dotproj remote my-project https://github.com/username/my-dotfiles.git
+
+# Or let dotproj prompt for the repository URL
+dotproj remote my-project
+
+# Apply the remote configuration to your project
+dotproj apply my-project
+```
+
 ## 🗂️ File Structure
 
 DotProj organizes your files in a clean structure:
@@ -186,6 +219,34 @@ project-name:dotfiles:/home/user/dotfiles/projects/project-name
 - **Validation**: Checks for file existence and project validity
 
 ## 🌐 Remote Repository Setup
+
+### Load from Existing Repository
+The `remote` command allows you to initialize a project from an existing dotproj repository:
+
+```bash
+# Initialize from a remote repository
+dotproj remote my-project https://github.com/username/my-dotfiles.git
+
+# This will:
+# 1. Clone the remote repository
+# 2. Validate it's a proper dotproj structure
+# 3. Set up the project locally
+# 4. Configure all settings automatically
+```
+
+### Repository Structure
+For a repository to be compatible with `dotproj remote`, it should have this structure:
+```
+your-dotfiles-repo/
+├── dotfiles/           # Required: Contains all the dotfiles
+│   ├── .env.local
+│   ├── .vscode/
+│   │   └── settings.json
+│   ├── .eslintrc.json
+│   └── other-config-files
+├── .git/              # Git repository data
+└── other-files        # Optional: README, docs, etc.
+```
 
 ### GitHub/GitLab Integration
 ```bash

@@ -91,15 +91,16 @@ usage() {
   echo "DotProj CLI - Manage project-specific dotfiles"
   echo "Usage: dotproj <command> [project]"
   echo "Commands:"
-  echo "  setup             Install DotProj and add to PATH"
-  echo "  init <project>    Initialize dotfiles for a project"
-  echo "  add <project>     Add more dotfiles to an existing project"
-  echo "  apply <project>   Apply dotfiles to the current environment"
-  echo "  save <project>    Save modified dotfiles to storage"
-  echo "  sync <project>    Commit and push/pull dotfiles to/from Git repo"
-  echo "  remove <project>  Remove a project and all its dotfiles"
-  echo "  list              List all projects"
-  echo "  status <project>  Show tracked and excluded dotfiles for a project"
+  echo "  setup               Install DotProj and add to PATH"
+  echo "  init <project>      Initialize dotfiles for a project"
+  echo "  remote <project>    Initialize from a remote dotproj repository"
+  echo "  add <project>       Add more dotfiles to an existing project"
+  echo "  apply <project>     Apply dotfiles to the current environment"
+  echo "  save <project>      Save modified dotfiles to storage"
+  echo "  sync <project>      Commit and push/pull dotfiles to/from Git repo"
+  echo "  remove <project>    Remove a project and all its dotfiles"
+  echo "  list                List all projects"
+  echo "  status <project>    Show tracked and excluded dotfiles for a project"
   echo "Use 'dotproj <command> --help' for more details"
   exit 1
 }
@@ -115,6 +116,12 @@ command_help() {
       echo "dotproj init <project>: Initializes dotfiles for a project"
       echo "Creates project storage and prompts for dotfiles selection"
       echo "Prompts for project path and optional Git repo"
+      ;;
+    remote)
+      echo "dotproj remote <project>: Initialize from a remote dotproj repository"
+      echo "Clones the repository and sets up the project with all dotfiles"
+      echo "Usage: dotproj remote <project> [git-repo-url]"
+      echo "If no URL provided, will prompt for repository URL"
       ;;
     add)
       echo "dotproj add <project>: Add more dotfiles to an existing project"
@@ -260,6 +267,140 @@ init() {
   cd "$project_dir" || exit 1
   git add .
   git commit -q -m "Add selected dotfiles for $PROJECT"
+}
+
+remote() {
+  check_project
+  local project_dir="$DOTFILES_ROOT/$PROJECT"
+  local git_repo="$3"
+
+  if [ -d "$project_dir" ]; then
+    echo "Error: Project '$PROJECT' already exists in $project_dir"
+    exit 1
+  fi
+
+  # Get Git repository URL if not provided
+  if [ -z "$git_repo" ]; then
+    echo ""
+    echo "🌐 Remote DotProj Repository"
+    echo "═══════════════════════════════════════════════════════════════"
+    echo "Enter the Git repository URL containing the dotproj configuration:"
+    echo ""
+    echo "Examples:"
+    echo "  https://github.com/username/my-dotfiles.git"
+    echo "  git@github.com:username/my-dotfiles.git"
+    echo "  https://gitlab.com/username/project-config.git"
+    echo ""
+    echo -n "Git repo URL: "
+    read -r git_repo
+    
+    if [ -z "$git_repo" ]; then
+      echo "Error: Git repository URL is required"
+      exit 1
+    fi
+  fi
+
+  echo ""
+  echo "🎯 Initializing '$PROJECT' from remote repository..."
+  echo "Repository: $git_repo"
+  echo "════════════════════════════════════════════════════════════════"
+
+  # Get project path
+  echo "Enter project path where dotfiles should be applied (default: $PWD):"
+  read -r project_path
+  project_path="${project_path:-$PWD}"
+  if [ ! -d "$project_path" ]; then
+    echo "Error: Directory $project_path does not exist"
+    exit 1
+  fi
+
+  echo "📥 Cloning remote repository..."
+  local temp_dir="/tmp/dotproj-remote-$$"
+  
+  # Clone the repository
+  if ! git clone "$git_repo" "$temp_dir" 2>/dev/null; then
+    echo "❌ Failed to clone repository: $git_repo"
+    echo "Please check:"
+    echo "  - Repository URL is correct"
+    echo "  - You have access to the repository"
+    echo "  - Repository exists and is accessible"
+    exit 1
+  fi
+
+  echo "🔍 Analyzing remote repository structure..."
+  
+  # Check if it's a valid dotproj repository
+  if [ ! -d "$temp_dir/dotfiles" ]; then
+    echo "❌ This doesn't appear to be a valid dotproj repository"
+    echo "Expected structure: repository/dotfiles/"
+    echo "Current structure:"
+    ls -la "$temp_dir"
+    rm -rf "$temp_dir"
+    exit 1
+  fi
+
+  echo "✅ Valid dotproj repository found!"
+  
+  # Create the project structure
+  echo "📁 Creating project structure..."
+  mkdir -p "$project_dir"
+  
+  # Copy the entire repository to the project directory
+  cp -r "$temp_dir/." "$project_dir/"
+  
+  # Ensure we're on the correct branch
+  cd "$project_dir" || exit 1
+  local branch_name="dotproj-$PROJECT"
+  
+  # Check if the remote has a branch with our project name, otherwise use current branch
+  if git show-ref --verify --quiet "refs/remotes/origin/$branch_name"; then
+    echo "🔀 Switching to project branch: $branch_name"
+    git checkout -q "$branch_name"
+  elif git show-ref --verify --quiet "refs/heads/$branch_name"; then
+    echo "🔀 Switching to existing local branch: $branch_name"
+    git checkout -q "$branch_name"
+  else
+    # Create a new branch from current branch
+    current_branch=$(git branch --show-current 2>/dev/null || echo "main")
+    echo "🆕 Creating new project branch: $branch_name (from $current_branch)"
+    git checkout -q -b "$branch_name"
+  fi
+
+  # Write configuration
+  write_config "$PROJECT" "dotfiles" "$project_dir"
+  write_config "$PROJECT" "path" "$project_path"
+  write_config "$PROJECT" "git" "$git_repo"
+
+  echo "✅ Successfully initialized '$PROJECT' from remote repository"
+  echo ""
+
+  # Show what was loaded
+  echo "📋 Loaded dotfiles:"
+  if [ -d "$project_dir/dotfiles" ] && [ "$(find "$project_dir/dotfiles" -type f | wc -l)" -gt 0 ]; then
+    find "$project_dir/dotfiles" -type f | while IFS= read -r file; do
+      rel_path="${file#$project_dir/dotfiles/}"
+      echo "  ✅ $rel_path"
+    done
+  else
+    echo "  ⚠️  No dotfiles found in the repository"
+  fi
+
+  echo ""
+  echo "🎉 Remote initialization complete!"
+  echo ""
+  echo "📋 Next steps:"
+  echo "  1. Review loaded dotfiles: dotproj status $PROJECT"
+  echo "  2. Apply to your project: dotproj apply $PROJECT"
+  echo "  3. Make changes and save: dotproj save $PROJECT"
+  echo "  4. Sync with remote: dotproj sync $PROJECT"
+  echo ""
+  echo "💡 Project details:"
+  echo "   Storage: $project_dir"
+  echo "   Target:  $project_path"
+  echo "   Remote:  $git_repo"
+
+  # Clean up
+  rm -rf "$temp_dir"
 }
 
 add() {
@@ -584,6 +725,10 @@ case "$CMD" in
   init)
     [ "$2" = "--help" ] && command_help init
     init
+    ;;
+  remote)
+    [ "$2" = "--help" ] && command_help remote
+    remote
     ;;
   add)
     [ "$2" = "--help" ] && command_help add
