@@ -8,6 +8,7 @@
 - 🔄 **Git Integration**: Version control and sync dotfiles across machines
 - 🎨 **Interactive Setup**: User-friendly prompts for selecting dotfiles to track
 - 🔧 **Flexible Configuration**: Support for any file type (.env, .vscode, .eslintrc, etc.)
+- 🔗 **Symlink Management**: Real-time sync between project and storage via symlinks
 - 💾 **Backup Safety**: Automatic backups when applying dotfiles
 - 🌐 **Remote Sync**: Push/pull dotfiles to/from remote Git repositories
 - 📊 **Status Tracking**: Monitor which files are tracked and their current state
@@ -58,17 +59,23 @@ sudo curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/dotpr
    - `.env.local, .vscode, .eslintrc.json`
    - Or any other configuration files you need
 
-3. **Apply dotfiles to your project:**
+3. **Apply dotfiles to your project (creates symlinks):**
    ```bash
    dotproj apply my-project
    ```
 
-4. **Save changes after modifying dotfiles:**
+4. **Edit dotfiles normally** - changes are automatically saved via symlinks:
+   ```bash
+   # Edit any tracked file directly in your project
+   # Changes are immediately reflected in storage
+   ```
+
+5. **Check symlink integrity (optional):**
    ```bash
    dotproj save my-project
    ```
 
-5. **Sync with Git repository:**
+6. **Sync with Git repository:**
    ```bash
    dotproj sync my-project
    ```
@@ -82,15 +89,15 @@ If you have an existing dotproj repository, you can load it directly:
    dotproj remote my-project https://github.com/username/my-dotfiles.git
    ```
 
-2. **Apply the dotfiles to your project:**
+2. **Apply the dotfiles to your project (creates symlinks):**
    ```bash
    dotproj apply my-project
    ```
 
-3. **Make changes and sync back:**
+3. **Edit files normally and sync changes:**
    ```bash
-   dotproj save my-project
-   dotproj sync my-project
+   # Edit tracked files directly - changes auto-saved via symlinks
+   dotproj sync my-project  # Commit and push changes
    ```
 
 ## 📖 Commands Reference
@@ -105,8 +112,8 @@ dotproj remote <project> [url]   # Initialize from a remote dotproj repository
 ### File Management
 ```bash
 dotproj add <project>            # Add more dotfiles to existing project
-dotproj apply <project>          # Apply stored dotfiles to project directory
-dotproj save <project>           # Save modified dotfiles from project to storage
+dotproj apply <project>          # Create symlinks from project to storage
+dotproj save <project>           # Check symlink integrity (changes auto-saved)
 ```
 
 ### Project Management
@@ -137,7 +144,7 @@ dotproj init my-react-app
 # Track common web dev dotfiles
 # When prompted, enter: .env.local, .vscode, .eslintrc.json, .prettierrc
 
-# Later, apply these settings to a new machine
+# Later, apply these settings to a new machine (creates symlinks)
 dotproj apply my-react-app
 ```
 
@@ -169,7 +176,7 @@ dotproj remote my-project https://github.com/username/my-dotfiles.git
 # Or let dotproj prompt for the repository URL
 dotproj remote my-project
 
-# Apply the remote configuration to your project
+# Apply the remote configuration to your project (creates symlinks)
 dotproj apply my-project
 ```
 
@@ -211,10 +218,36 @@ project-name:dotfiles:/home/user/dotfiles/projects/project-name
 - Supports remote repositories for team synchronization
 - Automatic conflict detection and resolution guidance
 
+## 🔗 How Symlinks Work
+
+DotProj uses **symlinks** to connect your project files to centralized storage:
+
+```
+Project Directory                Storage Directory
+├── .env → ~/dotfiles/.../env    ├── .env (actual file)
+├── .vscode/ → ~/dotfiles/...    ├── .vscode/ (actual files)
+└── config.json → ~/dotfiles... └── config.json (actual file)
+```
+
+### Key Benefits:
+- **Real-time sync**: Edit files in your project, changes immediately saved to storage
+- **No manual save**: Skip the `dotproj save` step - symlinks handle it automatically
+- **Safety**: Deleting project files only removes symlinks, your data stays safe
+- **Recovery**: `dotproj apply` recreates missing symlinks instantly
+
+### File Operations:
+| Action | Result | Storage Impact |
+|--------|--------|----------------|
+| Edit project file | ✅ Content updated | ✅ Immediately reflected |
+| Delete project file | ❌ Symlink removed | ✅ Storage file preserved |
+| Delete storage file | ❌ Broken symlink | ❌ Data lost permanently |
+
 ## 🛡️ Safety Features
 
-- **Automatic Backups**: Existing files are backed up before being overwritten
-- **Dry Run Status**: Check what files are tracked before applying changes
+- **Symlink Safety**: Deleting project files only removes symlinks, storage remains safe
+- **Automatic Backups**: Existing files are backed up to storage (not committed to Git)
+- **Real-time Sync**: Changes in project files immediately reflect in storage
+- **Integrity Checks**: Monitor and repair broken symlinks
 - **Conflict Detection**: Git merge conflicts are detected and reported
 - **Validation**: Checks for file existence and project validity
 

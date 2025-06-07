@@ -27,7 +27,6 @@ prompt_dotfiles_selection() {
   echo "Examples:"
   echo "  .env.local, .vscode, .cursor"
   echo "  .eslintrc.json, .prettierrc, .gitignore"
-  echo "  .bashrc, .zshrc, config/"
   echo ""
   echo "💡 Tips:"
   echo "  - Use relative paths from your project root"
@@ -47,12 +46,12 @@ prompt_dotfiles_selection() {
         if [ -e "$full_path" ]; then
           if [ -d "$full_path" ]; then
             find "$full_path" -type f | while IFS= read -r file; do
-              copy_dotfile "$file" "$DOTFILES_ROOT/$project/dotfiles" "$project_path"
+              link_dotfile "$file" "$DOTFILES_ROOT/$project/dotfiles" "$project_path"
               rel_path=$(get_relative_path "$file" "$project_path")
               echo "  ✅ Added: $rel_path"
             done
           else
-            copy_dotfile "$full_path" "$DOTFILES_ROOT/$project/dotfiles" "$project_path"
+            link_dotfile "$full_path" "$DOTFILES_ROOT/$project/dotfiles" "$project_path"
             echo "  ✅ Added: $item"
           fi
         else
@@ -74,7 +73,7 @@ is_tracked() {
   [ -f "$tracked_file" ]
 }
 
-copy_dotfile() {
+link_dotfile() {
   local src_file="$1"
   local dest_dir="$2"
   local project_path="$3"
@@ -87,6 +86,59 @@ copy_dotfile() {
   cp "$src_file" "$dest_file"
 }
 
+create_symlink() {
+  local stored_file="$1"
+  local target_file="$2"
+  local rel_path="$3"
+  local project_dir="$4"
+  
+  # Create backup if target exists and is not already a symlink to our stored file
+  if [ -e "$target_file" ]; then
+    if [ -L "$target_file" ]; then
+      # Check if it's already pointing to our stored file
+      if [ "$(readlink "$target_file")" = "$stored_file" ]; then
+        return 0  # Already correctly linked
+      else
+        # Symlink pointing elsewhere, back it up
+        local backup_dir="$project_dir/backups"
+        mkdir -p "$backup_dir"
+        local backup_file="$backup_dir/${rel_path//\//_}.backup.$(date +%s)"
+        mv "$target_file" "$backup_file"
+        echo "    📦 Backed up existing symlink: $rel_path -> backups/${backup_file##*/}"
+      fi
+    else
+      # Regular file, back it up
+      local backup_dir="$project_dir/backups"
+      mkdir -p "$backup_dir"
+      local backup_file="$backup_dir/${rel_path//\//_}.backup.$(date +%s)"
+      cp "$target_file" "$backup_file"
+      rm "$target_file"
+      echo "    📦 Backed up existing file: $rel_path -> backups/${backup_file##*/}"
+    fi
+  fi
+  
+  # Create the symlink
+  ln -s "$stored_file" "$target_file"
+}
+
+ensure_gitignore() {
+  local project_dir="$1"
+  local gitignore_file="$project_dir/.gitignore"
+  
+  # Create .gitignore if it doesn't exist
+  if [ ! -f "$gitignore_file" ]; then
+    touch "$gitignore_file"
+  fi
+  
+  # Add backups directory to .gitignore if not already there
+  if ! grep -q "^backups/" "$gitignore_file" 2>/dev/null; then
+    echo "" >> "$gitignore_file"
+    echo "# DotProj backup files" >> "$gitignore_file"
+    echo "backups/" >> "$gitignore_file"
+    echo "  ℹ️  Added backups/ to .gitignore"
+  fi
+}
+
 usage() {
   echo "DotProj CLI - Manage project-specific dotfiles"
   echo "Usage: dotproj <command> [project]"
@@ -95,8 +147,8 @@ usage() {
   echo "  init <project>      Initialize dotfiles for a project"
   echo "  remote <project>    Initialize from a remote dotproj repository"
   echo "  add <project>       Add more dotfiles to an existing project"
-  echo "  apply <project>     Apply dotfiles to the current environment"
-  echo "  save <project>      Save modified dotfiles to storage"
+  echo "  apply <project>     Apply dotfiles as symlinks to the current environment"
+  echo "  save <project>      Check dotfile symlink integrity (changes auto-saved)"
   echo "  sync <project>      Commit and push/pull dotfiles to/from Git repo"
   echo "  remove <project>    Remove a project and all its dotfiles"
   echo "  list                List all projects"
@@ -129,11 +181,11 @@ command_help() {
       ;;
     apply)
       echo "dotproj apply <project>: Applies dotfiles to the environment"
-      echo "Copies all tracked dotfiles from storage to their project locations"
+      echo "Creates symlinks from project locations to stored dotfiles"
       ;;
     save)
-      echo "dotproj save <project>: Saves modified dotfiles to storage"
-      echo "Updates storage with any changes made to tracked dotfiles"
+      echo "dotproj save <project>: Checks dotfile symlink integrity"
+      echo "With symlinks, changes are automatically reflected in storage"
       ;;
     sync)
       echo "dotproj sync <project>: Syncs dotfiles with Git"
@@ -251,6 +303,9 @@ init() {
   cd "$project_dir" || exit 1
   git init -q
   
+  # Ensure .gitignore excludes backups
+  ensure_gitignore "$project_dir"
+  
   local branch_name="dotproj-$PROJECT"
   git checkout -q -b "$branch_name"
   
@@ -350,6 +405,10 @@ remote() {
   
   # Ensure we're on the correct branch
   cd "$project_dir" || exit 1
+  
+  # Ensure .gitignore excludes backups
+  ensure_gitignore "$project_dir"
+  
   local branch_name="dotproj-$PROJECT"
   
   # Check if the remote has a branch with our project name, otherwise use current branch
@@ -437,6 +496,9 @@ add() {
   
   cd "$project_dir" || exit 1
   
+  # Ensure .gitignore excludes backups
+  ensure_gitignore "$project_dir"
+  
   local branch_name="dotproj-$PROJECT"
   current_branch=$(git branch --show-current 2>/dev/null || echo "")
   if [ "$current_branch" != "$branch_name" ]; then
@@ -505,22 +567,19 @@ apply() {
 
   echo "📋 Applying dotfiles for '$PROJECT'..."
 
+  # Ensure .gitignore excludes backups
+  ensure_gitignore "$project_dir"
+
   if [ -d "$dotfiles_dir" ] && [ "$(find "$dotfiles_dir" -type f | wc -l)" -gt 0 ]; then
-    echo "  Applying tracked dotfiles..."
+    echo "  Creating symlinks for tracked dotfiles..."
     find "$dotfiles_dir" -type f | while IFS= read -r stored_file; do
       rel_path="${stored_file#$dotfiles_dir/}"
       target_file="$project_path/$rel_path"
       
       mkdir -p "$(dirname "$target_file")"
       
-      if [ -f "$target_file" ] && ! cmp -s "$stored_file" "$target_file" 2>/dev/null; then
-        backup_file="$target_file.backup.$(date +%s)"
-        cp "$target_file" "$backup_file"
-        echo "    📦 Backed up existing: $rel_path -> ${backup_file##*/}"
-      fi
-      
-      cp "$stored_file" "$target_file"
-      echo "    ✅ Applied: $rel_path"
+      create_symlink "$stored_file" "$target_file" "$rel_path" "$project_dir"
+      echo "    🔗 Linked: $rel_path -> $stored_file"
     done
   else
     echo "  ℹ️  No dotfiles are currently tracked for this project"
@@ -547,32 +606,42 @@ save() {
     exit 1
   fi
 
-  echo "💾 Saving dotfiles for '$PROJECT'..."
+  echo "💾 Checking dotfiles for '$PROJECT'..."
 
   if [ -d "$dotfiles_dir" ] && [ "$(find "$dotfiles_dir" -type f | wc -l)" -gt 0 ]; then
-    echo "  Scanning for modified tracked dotfiles..."
-    local saved_count=0
+    echo "  ℹ️  With symlinks, changes are automatically saved to storage"
+    echo "  Verifying symlink integrity..."
     
+    local broken_links=0
     find "$dotfiles_dir" -type f | while IFS= read -r stored_file; do
       rel_path="${stored_file#$dotfiles_dir/}"
-      source_file="$project_path/$rel_path"
+      target_file="$project_path/$rel_path"
       
-      if [ -f "$source_file" ]; then
-        if ! cmp -s "$source_file" "$stored_file" 2>/dev/null; then
-          echo "    ✅ Updated: $rel_path"
-          copy_dotfile "$source_file" "$dotfiles_dir" "$project_path"
-          saved_count=$((saved_count + 1))
+      if [ -L "$target_file" ]; then
+        if [ "$(readlink "$target_file")" = "$stored_file" ]; then
+          echo "    ✅ Linked: $rel_path"
+        else
+          echo "    ⚠️  Warning: $rel_path points to $(readlink "$target_file")"
+          broken_links=$((broken_links + 1))
         fi
+      elif [ -f "$target_file" ]; then
+        echo "    ⚠️  Warning: $rel_path is a regular file, not a symlink"
+        broken_links=$((broken_links + 1))
       else
-        echo "    ⚠️  Warning: $rel_path no longer exists in project"
+        echo "    ❌ Missing: $rel_path no longer exists in project"
+        broken_links=$((broken_links + 1))
       fi
     done
+    
+    if [ $broken_links -gt 0 ]; then
+      echo "  💡 Run 'dotproj apply $PROJECT' to fix broken or missing links"
+    fi
   else
     echo "  ℹ️  No dotfiles are currently tracked for this project"
     echo "    Use 'dotproj add $PROJECT' to track some dotfiles"
   fi
   
-  echo "✅ Saved dotfiles for '$PROJECT'"
+  echo "✅ Dotfiles check completed for '$PROJECT'"
 }
 
 sync() {
@@ -700,9 +769,9 @@ status() {
 
   echo ""
   echo "💡 Available commands:"
-  echo "    dotproj add $PROJECT     - Add more dotfiles"
-  echo "    dotproj save $PROJECT    - Save changes to tracked files"
-  echo "    dotproj apply $PROJECT   - Apply dotfiles to project"
+      echo "    dotproj add $PROJECT     - Add more dotfiles"
+    echo "    dotproj save $PROJECT    - Check symlink integrity (changes auto-saved)"
+    echo "    dotproj apply $PROJECT   - Apply dotfiles as symlinks to project"
   echo "    dotproj sync $PROJECT    - Sync with Git repository"
 }
 
