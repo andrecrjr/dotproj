@@ -2,6 +2,38 @@
 
 **DotProj** is a powerful command-line tool that helps you manage project-specific dotfiles with Git versioning. Keep your development environment configurations organized, versioned, and synchronized across different machines and projects.
 
+## 📋 Summary
+
+DotProj addresses the challenge of managing various configuration and other project-specific files across different projects. Instead of manually transferring files like `.cursor`, `.vscode`, `.eslintrc`, `.env.local`, or any other files you wish to keep safe and organized, DotProj:
+
+- **Centralizes** your configuration files (including dotfiles and other project files) in a structured storage system
+- **Symlinks** files to your projects for real-time synchronization  
+- **Versions** everything with Git for backup and team collaboration
+- **Syncs** configurations across machines and team members
+- **Organizes** project-specific settings separately from global ones
+
+**Perfect for**: Web developers juggling multiple projects, DevOps teams sharing configurations, or anyone who wants consistent development environments without manual file management.
+
+**One-liner**: `curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/install.sh | bash`
+
+## 📚 Table of Contents
+
+- [✨ Features](#-features)
+- [🚀 Quick Start](#-quick-start)
+  - [Installation](#installation)
+  - [Basic Usage](#basic-usage)
+  - [Alternative: Load from Remote Repository](#alternative-load-from-remote-repository)
+- [📖 Commands Reference](#-commands-reference)
+- [💡 Use Cases](#-use-cases)
+- [🗂️ File Structure](#️-file-structure)
+- [🔧 Configuration](#-configuration)
+- [🔗 How Symlinks Work](#-how-symlinks-work)
+- [🛡️ Safety Features](#️-safety-features)
+- [🌐 Remote Repository Setup](#-remote-repository-setup)
+- [🔍 Troubleshooting](#-troubleshooting)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+
 ## ✨ Features
 
 - 📁 **Project-Specific Management**: Track different dotfiles for each project
