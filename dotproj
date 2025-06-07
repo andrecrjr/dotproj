@@ -66,10 +66,10 @@ prompt_dotfiles_selection() {
   echo ""
   echo "📁 Dotfiles Selection for '$project'"
   echo "════════════════════════════════════════════════════════════════"
-  echo "Enter the dotfiles/folders you want to track (comma-separated):"
+  echo "Enter the files/dotfiles/folders you want to track (comma-separated):"
   echo ""
   echo "Examples:"
-  echo "  .env.local, .vscode, .cursor"
+  echo "  .env.local, .vscode, .cursor, monorepo/front-end/.cursor, monorepo/back-end/.env"
   echo "  .eslintrc.json, .prettierrc, .gitignore"
   echo ""
   echo "💡 Tips:"
@@ -146,18 +146,24 @@ create_symlink() {
         # Symlink pointing elsewhere, back it up
         local backup_dir="$project_dir/backups"
         mkdir -p "$backup_dir"
-        local backup_file="$backup_dir/${rel_path//\//_}.backup.$(date +%s)"
+        local backup_file="$backup_dir/${rel_path//\//_}.backup"
+        
+        # Remove existing backup if it exists, then create new one
+        [ -e "$backup_file" ] && rm -f "$backup_file"
         mv "$target_file" "$backup_file"
-        echo "    📦 Backed up existing symlink: $rel_path -> backups/${backup_file##*/}"
+        echo "    📦 Updated backup for symlink: $rel_path -> backups/${backup_file##*/}"
       fi
     else
       # Regular file, back it up
       local backup_dir="$project_dir/backups"
       mkdir -p "$backup_dir"
-      local backup_file="$backup_dir/${rel_path//\//_}.backup.$(date +%s)"
+      local backup_file="$backup_dir/${rel_path//\//_}.backup"
+      
+      # Remove existing backup if it exists, then create new one
+      [ -e "$backup_file" ] && rm -f "$backup_file"
       cp "$target_file" "$backup_file"
       rm "$target_file"
-      echo "    📦 Backed up existing file: $rel_path -> backups/${backup_file##*/}"
+      echo "    📦 Updated backup for file: $rel_path -> backups/${backup_file##*/}"
     fi
   fi
   
