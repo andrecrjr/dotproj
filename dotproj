@@ -178,25 +178,33 @@ write_config() {
 }
 
 setup() {
-  if [ -f "$HOME/.dotproj/dotproj.sh" ]; then
-    echo "DotProj already installed at ~/.dotproj/dotproj.sh"
+  # Create dotproj directory
+  mkdir -p "$HOME/.dotproj"
+  
+  # Install the script with proper naming
+  if [ -f "$HOME/.dotproj/dotproj" ]; then
+    echo "DotProj already installed at ~/.dotproj/dotproj"
   else
-    echo "Installing DotProj to ~/.dotproj/dotproj.sh..."
-    mkdir -p "$HOME/.dotproj"
-    cp "$0" "$HOME/.dotproj/dotproj.sh"
-    chmod +x "$HOME/.dotproj/dotproj.sh"
+    echo "Installing DotProj to ~/.dotproj/dotproj..."
+    cp "$0" "$HOME/.dotproj/dotproj"
+    chmod +x "$HOME/.dotproj/dotproj"
   fi
 
+  # Add to PATH if not already there
   shell_file="$HOME/.bashrc"
   [ -f "$HOME/.zshrc" ] && shell_file="$HOME/.zshrc"
+  
   if ! grep -q "PATH.*\.dotproj" "$shell_file"; then
     echo "Adding DotProj to PATH in $shell_file..."
+    echo '' >> "$shell_file"
+    echo '# DotProj - Project-specific dotfiles manager' >> "$shell_file"
     echo 'export PATH="$HOME/.dotproj:$PATH"' >> "$shell_file"
-    echo "Please restart your terminal or run 'source $shell_file'"
+    echo "✅ Added to PATH. Please restart your terminal or run: source $shell_file"
   else
-    echo "DotProj already in PATH"
+    echo "✅ DotProj already in PATH"
   fi
-  echo "Setup complete! Run 'dotproj --help' for commands"
+  
+  echo "🎉 Setup complete! Run 'dotproj --help' for available commands"
 }
 
 init() {

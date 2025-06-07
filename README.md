@@ -26,11 +26,14 @@ source ~/.bashrc  # or ~/.zshrc
 ```
 *Note: This downloads the install script which then fetches the master dotproj script from the repository.*
 
-#### Option 2: One-Line Install
+#### Option 2: Manual Download and Setup
 ```bash
-# Download, install, and cleanup in one command (most reliable)
-curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/dotproj -o dotproj && chmod +x dotproj && ./dotproj setup && rm dotproj
+# Download, setup, and install manually
+curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/dotproj -o dotproj
+chmod +x dotproj
+./dotproj setup
 
+# The script is now permanently installed at ~/.dotproj/dotproj
 # Restart your terminal
 source ~/.bashrc  # or ~/.zshrc
 ```
@@ -144,7 +147,7 @@ DotProj organizes your files in a clean structure:
 ```
 ~/.dotproj/
 ├── config                      # Project configuration
-└── dotproj.sh                  # Installed script
+└── dotproj                     # Installed script (executable)
 
 ~/dotfiles/projects/
 ├── my-project/
@@ -193,18 +196,6 @@ project-name:dotfiles:/home/user/dotfiles/projects/project-name
 # Or configure later in ~/.dotproj/config
 ```
 
-### Team Collaboration
-```bash
-# Team member A sets up dotfiles
-dotproj init shared-project
-# Configures Git repo: https://github.com/team/shared-dotfiles.git
-
-# Team member B syncs the same dotfiles
-dotproj init shared-project
-# Uses same Git repo URL
-dotproj sync shared-project  # Pulls existing configuration
-```
-
 ## 🔍 Troubleshooting
 
 ### Common Issues
@@ -213,6 +204,9 @@ dotproj sync shared-project  # Pulls existing configuration
 ```bash
 # Restart terminal or manually source your shell config
 source ~/.bashrc  # or ~/.zshrc
+
+# Verify installation
+which dotproj  # Should show: /home/user/.dotproj/dotproj
 ```
 
 **Git sync failures:**
