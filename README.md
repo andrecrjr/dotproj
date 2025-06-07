@@ -16,53 +16,33 @@
 
 ### Installation
 
-#### Option 1: Direct Download (Recommended)
+#### Option 1: Installation Script (Recommended)
 ```bash
-# Download the script directly
-wget https://raw.githubusercontent.com/andrecrjr/dotproj/main/dotproj -O dotproj
+# One command to install everything
+curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/main/install.sh | bash
 
-# Make it executable
-chmod +x dotproj
+# Then restart your terminal or source your shell config
+source ~/.bashrc  # or ~/.zshrc
+```
+*Note: This downloads the install script which then fetches the main dotproj script from the repository.*
 
-# Install and add to PATH
-./dotproj setup
+#### Option 2: One-Line Install
+```bash
+# Download, install, and cleanup in one command (most reliable)
+curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/main/dotproj -o dotproj && chmod +x dotproj && ./dotproj setup && rm dotproj
 
-# Restart your terminal or source your shell config
+# Restart your terminal
 source ~/.bashrc  # or ~/.zshrc
 ```
 
-#### Option 2: Using curl
+#### Option 3: Direct to PATH
 ```bash
-# Download with curl
-curl -o dotproj https://raw.githubusercontent.com/andrecrjr/dotproj/main/dotproj
+# Install directly to your local bin (no setup needed)
+curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/main/dotproj -o ~/.local/bin/dotproj && chmod +x ~/.local/bin/dotproj
 
-# Make it executable and setup
-chmod +x dotproj
-./dotproj setup
-source ~/.bashrc  # or ~/.zshrc
+# Or system-wide install (requires sudo)
+sudo curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/main/dotproj -o /usr/local/bin/dotproj && sudo chmod +x /usr/local/bin/dotproj
 ```
-
-#### Option 3: Git Clone
-```bash
-# Clone the repository (if you want the full project)
-git clone https://github.com/yourusername/dotproj.git
-cd dotproj
-chmod +x dotproj
-./dotproj setup
-source ~/.bashrc  # or ~/.zshrc
-```
-
-#### Option 4: Manual Download
-1. Go to the [GitHub repository](https://github.com/yourusername/dotproj)
-2. Click on the `dotproj` file
-3. Click the "Raw" button
-4. Right-click and "Save As" to download the file
-5. Open terminal in the download directory and run:
-   ```bash
-   chmod +x dotproj
-   ./dotproj setup
-   source ~/.bashrc  # or ~/.zshrc
-   ```
 
 ### Basic Usage
 
