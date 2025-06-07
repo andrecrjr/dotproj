@@ -277,7 +277,7 @@ Project Directory                Storage Directory
 ## 🛡️ Safety Features
 
 - **Symlink Safety**: Deleting project files only removes symlinks, storage remains safe
-- **Automatic Backups**: Existing files are backed up to storage (not committed to Git)
+- **Automatic Backups**: Existing files are backed up before being replaced (backups are not committed to Git)
 - **Real-time Sync**: Changes in project files immediately reflect in storage
 - **Integrity Checks**: Monitor and repair broken symlinks
 - **Conflict Detection**: Git merge conflicts are detected and reported
@@ -344,8 +344,8 @@ dotproj status <project>
 
 **File conflicts during apply:**
 ```bash
-# Check backup files created automatically
-ls -la *.backup.*
+# Check backup files created automatically in the backups directory
+ls -la backups/
 # Review differences and restore if needed
 ```
 

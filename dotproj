@@ -769,9 +769,9 @@ status() {
 
   echo ""
   echo "💡 Available commands:"
-      echo "    dotproj add $PROJECT     - Add more dotfiles"
-    echo "    dotproj save $PROJECT    - Check symlink integrity (changes auto-saved)"
-    echo "    dotproj apply $PROJECT   - Apply dotfiles as symlinks to project"
+  echo "    dotproj add $PROJECT     - Add more dotfiles"
+  echo "    dotproj save $PROJECT    - Check symlink integrity (changes auto-saved)"
+  echo "    dotproj apply $PROJECT   - Apply dotfiles as symlinks to project"
   echo "    dotproj sync $PROJECT    - Sync with Git repository"
 }
 
