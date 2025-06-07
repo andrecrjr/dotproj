@@ -584,6 +584,24 @@ add() {
   
   prompt_dotfiles_selection "$project_path" "$PROJECT"
   
+  # Create symlinks for newly added files
+  local dotfiles_dir="$project_dir/dotfiles"
+  if [ -d "$dotfiles_dir" ] && [ "$(find "$dotfiles_dir" -type f | wc -l)" -gt 0 ]; then
+    echo ""
+    echo "🔗 Creating symlinks for newly added files..."
+    find "$dotfiles_dir" -type f | while IFS= read -r stored_file; do
+      rel_path="${stored_file#$dotfiles_dir/}"
+      target_file="$project_path/$rel_path"
+      
+      # Only create symlink if target doesn't exist or isn't already correctly linked
+      if [ ! -L "$target_file" ] || [ "$(readlink "$target_file" 2>/dev/null)" != "$stored_file" ]; then
+        mkdir -p "$(dirname "$target_file")"
+        create_symlink "$stored_file" "$target_file" "$rel_path" "$project_dir"
+        echo "    🔗 Linked: $rel_path"
+      fi
+    done
+  fi
+  
   cd "$project_dir" || exit 1
   
   # Ensure .gitignore excludes backups
@@ -599,7 +617,7 @@ add() {
   git commit -q -m "Add new dotfiles to $PROJECT" 2>/dev/null || echo "No new files to commit"
   
   echo ""
-  echo "✅ Successfully added dotfiles to '$PROJECT'"
+  echo "✅ Successfully added and linked dotfiles to '$PROJECT'"
 }
 
 remove() {

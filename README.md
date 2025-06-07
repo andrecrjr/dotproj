@@ -1,424 +1,189 @@
-# 🎯 DotProj - Project-Specific Dotfiles Manager
+# 🎯 DotProj - Project-Specific Configuration Manager
 
-**DotProj** is a powerful command-line tool that helps you manage project-specific dotfiles with Git versioning. Keep your development environment configurations organized, versioned, and synchronized across different machines and projects.
+**DotProj** is a developer-focused CLI tool that manages project-specific configuration files with Git versioning. Keep your development environment settings organized, versioned, and synchronized across machines and projects.
 
-## 📋 Summary
+## 📋 What It Solves
 
-DotProj addresses the challenge of managing various configuration and other project-specific files across different projects. Instead of manually transferring files like `.cursor`, `.vscode`, `.eslintrc`, `.env.local`, or any other files you wish to keep safe and organized, DotProj:
+Eliminates the hassle of manually copying configuration files like:
+- **Environment files**: `.env`, `.env.local`, `.env.development`
+- **Editor configurations**: `.vscode/settings.json`, `.cursorrules`, `.cursor/`
+- **Linting & formatting**: `.eslintrc.json`, `.prettierrc`, `.editorconfig`
+- **Build & deployment**: `docker-compose.override.yml`, `Dockerfile.dev`
 
-- **Centralizes** your configuration files (including dotfiles and other project files) in a structured storage system
-- **Symlinks** files to your projects for real-time synchronization  
-- **Versions** everything with Git for backup and team collaboration
-- **Syncs** configurations across machines and team members
-- **Organizes** project-specific settings separately from global ones
+**Key Features**:
+- **Centralizes** configurations in organized storage
+- **Symlinks** files for real-time synchronization
+- **Smart backups** - one backup per file, no clutter
+- **Git versioning** for team collaboration
+- **Cross-machine sync** via remote repositories
 
-**Perfect for**: Web developers juggling multiple projects, DevOps teams sharing configurations, or anyone who wants consistent development environments without manual file management.
+**Install**: `curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/install.sh | bash`
 
-**One-liner**: `curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/install.sh | bash`
+## 🚀 Essential Workflows
 
-## 📚 Table of Contents
-
-- [✨ Features](#-features)
-- [🚀 Quick Start](#-quick-start)
-  - [Installation](#installation)
-  - [Basic Usage](#basic-usage)
-  - [Alternative: Load from Remote Repository](#alternative-load-from-remote-repository)
-- [📖 Commands Reference](#-commands-reference)
-- [💡 Use Cases](#-use-cases)
-- [🗂️ File Structure](#️-file-structure)
-- [🔧 Configuration](#-configuration)
-- [🔗 How Symlinks Work](#-how-symlinks-work)
-- [🛡️ Safety Features](#️-safety-features)
-- [🌐 Remote Repository Setup](#-remote-repository-setup)
-- [🔍 Troubleshooting](#-troubleshooting)
-- [🤝 Contributing](#-contributing)
-- [📄 License](#-license)
-
-## ✨ Features
-
-- 📁 **Project-Specific Management**: Track different dotfiles for each project
-- 🔄 **Git Integration**: Full version control and sync dotfiles across machines (requires Git)
-- 🎨 **Interactive Setup**: User-friendly prompts for selecting dotfiles to track
-- 🔧 **Flexible Configuration**: Support for any file type (.env, .vscode, .eslintrc, etc.)
-- 🔗 **Symlink Management**: Real-time sync between project and storage via symlinks
-- 💾 **Backup Safety**: Automatic backups when applying dotfiles
-- 🌐 **Remote Sync**: Push/pull dotfiles to/from remote Git repositories
-- 📊 **Status Tracking**: Monitor which files are tracked and their current state
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-**DotProj requires Git to be installed on your system** for version control and synchronization features.
-
-**Install Git:**
-- **Ubuntu/Debian**: `sudo apt update && sudo apt install git`
-- **CentOS/RHEL**: `sudo yum install git`
-- **Fedora**: `sudo dnf install git`
-- **macOS**: `brew install git` (or install Xcode Command Line Tools)
-- **Arch Linux**: `sudo pacman -S git`
-
-**Configure Git (if not already done):**
+**Prerequisites**: Git must be installed and configured
 ```bash
 git config --global user.name "Your Name"
 git config --global user.email "your.email@example.com"
 ```
 
-### Installation
+### 🔧 Basic Individual Flow
 
-#### Option 1: Installation Script (Recommended)
+**Create new project**:
 ```bash
-# One command to install everything
-curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/install.sh | bash
+# 1. Initialize project (prompts for files, creates symlinks automatically)
+dotproj init my-project
 
-# Then restart your terminal or source your shell config
-source ~/.bashrc  # or ~/.zshrc
-```
-*Note: This downloads the install script which then fetches the master dotproj script from the repository.*
+# 2. Select files when prompted: .env.local, .vscode, .cursorrules, etc.
+#    → Files are copied to storage and symlinked back to project
 
-#### Option 2: Manual Download and Setup
-```bash
-# Download, setup, and install manually
-curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/dotproj -o dotproj
-chmod +x dotproj
-./dotproj setup
+# 3. Work normally - changes auto-saved via symlinks
 
-# The script is now permanently installed at ~/.dotproj/dotproj
-# Restart your terminal
-source ~/.bashrc  # or ~/.zshrc
+# 4. Sync changes to Git (when ready)
+dotproj sync my-project
 ```
 
-#### Option 3: Direct to PATH
+**Add more files later**:
 ```bash
-# Install directly to your local bin (no setup needed)
-curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/dotproj -o ~/.local/bin/dotproj && chmod +x ~/.local/bin/dotproj
-
-# Or system-wide install (requires sudo)
-sudo curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/dotproj -o /usr/local/bin/dotproj && sudo chmod +x /usr/local/bin/dotproj
+# Add new files to existing project
+dotproj add my-project        # Interactive selection + creates symlinks
+dotproj sync my-project       # Commit changes
 ```
 
-### Basic Usage
+### 👥 Team Shared Flow
 
-1. **Initialize a new project:**
-   ```bash
-   dotproj init my-project
-   ```
-   
-2. **Select dotfiles to track** (interactive prompt will guide you):
-   - `.env.local, .vscode, .eslintrc.json`
-   - Or any other configuration files you need
-
-3. **Apply dotfiles to your project (creates symlinks):**
-   ```bash
-   dotproj apply my-project
-   ```
-
-4. **Edit dotfiles normally** - changes are automatically saved via symlinks:
-   ```bash
-   # Edit any tracked file directly in your project
-   # Changes are immediately reflected in storage
-   ```
-
-5. **Check symlink integrity (optional):**
-   ```bash
-   dotproj save my-project
-   ```
-
-6. **Sync with Git repository:**
-   ```bash
-   dotproj sync my-project
-   ```
-
-### Alternative: Load from Remote Repository
-
-If you have an existing dotproj repository, you can load it directly:
-
-1. **Initialize from remote repository:**
-   ```bash
-   dotproj remote my-project https://github.com/username/my-dotfiles.git
-   ```
-
-2. **Apply the dotfiles to your project (creates symlinks):**
-   ```bash
-   dotproj apply my-project
-   ```
-
-3. **Edit files normally and sync changes:**
-   ```bash
-   # Edit tracked files directly - changes auto-saved via symlinks
-   dotproj sync my-project  # Commit and push changes
-   ```
-
-## 📖 Commands Reference
-
-### Setup and Initialization
+**Team member 1 - Create and share**:
 ```bash
-dotproj setup                    # Install DotProj and add to PATH
-dotproj init <project>           # Initialize a new project (interactive)
-dotproj remote <project> [url]   # Initialize from a remote dotproj repository
+# 1. Create project with Git repo
+dotproj init team-project
+# → Enter Git repo URL when prompted: https://github.com/team/project-config.git
+
+# 2. Select team files: .env.example, .vscode, .cursorrules, etc.
+
+# 3. Share with team
+dotproj sync team-project     # Pushes to remote repo
 ```
 
-### File Management
+**Team member 2+ - Load and use**:
 ```bash
-dotproj add <project>            # Add more dotfiles to existing project
-dotproj apply <project>          # Create symlinks from project to storage
-dotproj save <project>           # Check symlink integrity (changes auto-saved)
+# 1. Load from team's repository
+dotproj remote team-project https://github.com/team/project-config.git
+
+# 2. Apply to your project
+dotproj apply team-project    # Creates symlinks from team's files
+
+# 3. Work and sync changes
+# Edit files normally...
+dotproj sync team-project     # Commits and pushes your changes
 ```
 
-### Project Management
+## 📖 Commands
+
 ```bash
-dotproj list                     # List all initialized projects
-dotproj status <project>         # Show tracked files and project status
-dotproj remove <project>         # Remove project and all its dotfiles
+# Essential Commands
+dotproj init <project>           # Create new project (includes file selection + symlinks)
+dotproj remote <project> <url>   # Load from team repository
+dotproj add <project>            # Add more files + create symlinks
+dotproj apply <project>          # Create symlinks from stored files (for remote projects)
+dotproj sync <project>           # Commit and push/pull changes
+
+# Management
+dotproj list                     # Show all projects
+dotproj status <project>         # Show tracked files
+dotproj save <project>           # Check symlink integrity
+
+# Setup
+dotproj setup                    # Install dotproj
 ```
 
-### Git Operations
-```bash
-dotproj sync <project>           # Commit and sync with remote repository
-```
 
-### Help
-```bash
-dotproj --help                   # Show general help
-dotproj <command> --help         # Show command-specific help
-```
 
 ## 💡 Use Cases
 
-### Web Development Project
+**React/Next.js**:
 ```bash
-# Initialize project for a React app
-dotproj init my-react-app
-
-# Track common web dev dotfiles
-# When prompted, enter: .env.local, .vscode, .eslintrc.json, .prettierrc
-
-# Later, apply these settings to a new machine (creates symlinks)
-dotproj apply my-react-app
+dotproj init my-nextjs-app
+# Track: .env.local, .vscode, .eslintrc.json, .prettierrc, .cursorrules
 ```
 
-### DevOps Configuration
+**Full-Stack**:
 ```bash
-# Initialize project for infrastructure
-dotproj init devops-project
-
-# Track configuration files
-# When prompted, enter: .env, docker-compose.override.yml, .terraform
-
-# Sync across team members
-dotproj sync devops-project
+dotproj init fullstack-project  
+# Track: .env, .env.local, .vscode, docker-compose.override.yml, .cursorrules
 ```
 
-### Personal Development Environment
+**AI/ML with Cursor**:
 ```bash
-# Track shell and editor configurations
-dotproj init personal-setup
-
-# When prompted, enter: .bashrc, .zshrc, .vimrc, .gitconfig
+dotproj init ai-project
+# Track: .cursorrules, .cursor/, .env, .vscode, requirements-dev.txt
 ```
 
-### Remote Repository Setup
-```bash
-# Initialize from an existing dotproj repository
-dotproj remote my-project https://github.com/username/my-dotfiles.git
+## 🔗 How It Works
 
-# Or let dotproj prompt for the repository URL
-dotproj remote my-project
-
-# Apply the remote configuration to your project (creates symlinks)
-dotproj apply my-project
-```
-
-## 🗂️ File Structure
-
-DotProj organizes your files in a clean structure:
-
-```
-~/.dotproj/
-├── config                      # Project configuration
-└── dotproj                     # Installed script (executable)
-
-~/dotfiles/projects/
-├── my-project/
-│   ├── .git/                   # Git repository
-│   └── dotfiles/               # Tracked dotfiles
-│       ├── .env.local
-│       ├── .vscode/
-│       │   └── settings.json
-│       └── .eslintrc.json
-└── another-project/
-    └── dotfiles/
-        └── ...
-```
-
-## 🔧 Configuration
-
-### Project Configuration
-Each project stores its configuration in `~/.dotproj/config`:
-```
-project-name:path:/path/to/project
-project-name:git:https://github.com/user/project-dotfiles.git
-project-name:dotfiles:/home/user/dotfiles/projects/project-name
-```
-
-### Git Integration
-- Each project gets its own Git repository
-- Uses project-specific branches: `dotproj-<project-name>`
-- Supports remote repositories for team synchronization
-- Automatic conflict detection and resolution guidance
-
-## 🔗 How Symlinks Work
-
-DotProj uses **symlinks** to connect your project files to centralized storage:
-
+**Symlinks connect project files to centralized storage**:
 ```
 Project Directory                Storage Directory
 ├── .env → ~/dotfiles/.../env    ├── .env (actual file)
 ├── .vscode/ → ~/dotfiles/...    ├── .vscode/ (actual files)
-└── config.json → ~/dotfiles... └── config.json (actual file)
 ```
 
-### Key Benefits:
-- **Real-time sync**: Edit files in your project, changes immediately saved to storage
-- **No manual save**: Skip the `dotproj save` step - symlinks handle it automatically
-- **Safety**: Deleting project files only removes symlinks, your data stays safe
-- **Recovery**: `dotproj apply` recreates missing symlinks instantly
+**Benefits**:
+- Edit files in project → changes immediately saved to storage
+- Delete project files → only removes symlinks, data stays safe
+- `dotproj apply` recreates missing symlinks instantly
 
-### File Operations:
-| Action | Result | Storage Impact |
-|--------|--------|----------------|
-| Edit project file | ✅ Content updated | ✅ Immediately reflected |
-| Delete project file | ❌ Symlink removed | ✅ Storage file preserved |
-| Delete storage file | ❌ Broken symlink | ❌ Data lost permanently |
+## 🛡️ Safety & Backup System
 
-## 🛡️ Safety Features
+- **Smart backups**: One backup per file (e.g., `backups/.env_local.backup`)
+- **No clutter**: Backups update in place, no timestamped accumulation
+- **Symlink safety**: Deleting project files only removes symlinks
+- **Git versioning**: Full history and conflict detection
+- **Easy restoration**: Predictable backup names
 
-- **Symlink Safety**: Deleting project files only removes symlinks, storage remains safe
-- **Automatic Backups**: Existing files are backed up before being replaced (backups are not committed to Git)
-- **Real-time Sync**: Changes in project files immediately reflect in storage
-- **Integrity Checks**: Monitor and repair broken symlinks
-- **Conflict Detection**: Git merge conflicts are detected and reported
-- **Validation**: Checks for file existence and project validity
+## 🗂️ File Structure
 
-## 🌐 Remote Repository Setup
-
-### Load from Existing Repository
-The `remote` command allows you to initialize a project from an existing dotproj repository:
-
-```bash
-# Initialize from a remote repository
-dotproj remote my-project https://github.com/username/my-dotfiles.git
-
-# This will:
-# 1. Clone the remote repository
-# 2. Validate it's a proper dotproj structure
-# 3. Set up the project locally
-# 4. Configure all settings automatically
 ```
+~/.dotproj/
+├── config                      # Project configuration
+└── dotproj                     # Installed script
 
-### Repository Structure
-For a repository to be compatible with `dotproj remote`, it should have this structure:
-```
-your-dotfiles-repo/
-├── dotfiles/           # Required: Contains all the dotfiles
-│   ├── .env.local
-│   ├── .vscode/
-│   │   └── settings.json
-│   ├── .eslintrc.json
-│   └── other-config-files
-├── .git/              # Git repository data
-└── other-files        # Optional: README, docs, etc.
-```
-
-### GitHub/GitLab Integration
-```bash
-# During init, provide your repository URL:
-# https://github.com/username/project-dotfiles.git
-# git@github.com:username/project-dotfiles.git
-
-# Or configure later in ~/.dotproj/config
+~/dotfiles/projects/
+├── my-project/
+│   ├── .git/                   # Git repository
+│   ├── dotfiles/               # Tracked files
+│   └── backups/                # Single backup per file
 ```
 
 ## 🔍 Troubleshooting
 
-### Common Issues
-
-**Git not installed:**
+**Git not installed**:
 ```bash
-# If you see "Git is required but not installed"
-# Install Git first, then run dotproj again
-
-# Ubuntu/Debian
-sudo apt update && sudo apt install git
-
-# CentOS/RHEL
-sudo yum install git
-
-# Fedora
-sudo dnf install git
-
-# macOS
-brew install git
-
-# Configure Git
-git config --global user.name "Your Name"
-git config --global user.email "your.email@example.com"
+# Ubuntu/Debian: sudo apt install git
+# CentOS/RHEL: sudo yum install git  
+# Fedora: sudo dnf install git
+# macOS: brew install git
 ```
 
-**Command not found after setup:**
+**Command not found**:
 ```bash
-# Restart terminal or manually source your shell config
 source ~/.bashrc  # or ~/.zshrc
-
-# Verify installation
-which dotproj  # Should show: /home/user/.dotproj/dotproj
+which dotproj     # Should show: ~/.dotproj/dotproj
 ```
 
-**Git sync failures:**
+**Backup/restore files**:
 ```bash
-# Check your repository URL and permissions
-dotproj status <project>
-# Verify Git credentials and repository access
+ls -la backups/   # View backups
+cp backups/.env_local.backup .env.local  # Restore if needed
 ```
 
-**File conflicts during apply:**
+**Fix broken symlinks**:
 ```bash
-# Check backup files created automatically in the backups directory
-ls -la backups/
-# Review differences and restore if needed
+dotproj save <project>    # Check integrity
+dotproj apply <project>   # Fix broken links
 ```
 
-### Getting Help
-```bash
-dotproj --help                  # General help
-dotproj <command> --help        # Command-specific help
-dotproj status <project>        # Debug project state
-```
-
-## 🤝 Contributing
-
-DotProj is designed to be simple and extensible. Feel free to:
-- Report issues and suggest improvements
-- Add support for new file types
-- Enhance Git integration features
-- Improve user experience
+> **Tip**: Use `dotproj list` to see all projects and `dotproj status <project>` to check tracked files for a specific project.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-Copyright (c) 2024 Andre Jr (andrecrjr)
-
-The MIT License allows you to:
-- ✅ Use the software for any purpose
-- ✅ Modify and distribute the software
-- ✅ Include it in commercial projects
-- ✅ Sublicense the software
-
-**Requirements**: Include the original copyright notice and license in any copy or substantial portion of the software.
-
----
-
-**Happy coding with organized dotfiles! 🎉**
-
-> **Tip**: Use `dotproj list` to see all your projects and `dotproj status <project>` to check what's being tracked.
+MIT License - Copyright (c) 2024 Andre Jr (andrecrjr)
