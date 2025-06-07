@@ -1,0 +1,614 @@
+#!/bin/bash
+
+# DotProj CLI - Manages project-specific dotfiles with Git versioning
+
+CONFIG_FILE="$HOME/.dotproj/config"
+DOTFILES_ROOT="$HOME/dotfiles/projects"
+CMD="$1"
+PROJECT="$2"
+
+mkdir -p "$DOTFILES_ROOT"
+
+get_relative_path() {
+  local file="$1"
+  local project_path="$2"
+  echo "${file#$project_path/}"
+}
+
+prompt_dotfiles_selection() {
+  local project_path="$1"
+  local project="$2"
+  
+  echo ""
+  echo "📁 Dotfiles Selection for '$project'"
+  echo "════════════════════════════════════════════════════════════════"
+  echo "Enter the dotfiles/folders you want to track (comma-separated):"
+  echo ""
+  echo "Examples:"
+  echo "  .env.local, .vscode, .cursor"
+  echo "  .eslintrc.json, .prettierrc, .gitignore"
+  echo "  .bashrc, .zshrc, config/"
+  echo ""
+  echo "💡 Tips:"
+  echo "  - Use relative paths from your project root"
+  echo "  - Folders will include all files within them"
+  echo "  - You can add more dotfiles later with 'dotproj add <project>'"
+  echo ""
+  echo -n "Enter dotfiles to track (or press Enter to skip): "
+  read -r dotfiles_input
+  
+  if [ -n "$dotfiles_input" ]; then
+    echo "$dotfiles_input" | tr ',' '\n' | while IFS= read -r item; do
+      item=$(echo "$item" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+      
+      if [ -n "$item" ]; then
+        full_path="$project_path/$item"
+        
+        if [ -e "$full_path" ]; then
+          if [ -d "$full_path" ]; then
+            find "$full_path" -type f | while IFS= read -r file; do
+              copy_dotfile "$file" "$DOTFILES_ROOT/$project/dotfiles" "$project_path"
+              rel_path=$(get_relative_path "$file" "$project_path")
+              echo "  ✅ Added: $rel_path"
+            done
+          else
+            copy_dotfile "$full_path" "$DOTFILES_ROOT/$project/dotfiles" "$project_path"
+            echo "  ✅ Added: $item"
+          fi
+        else
+          echo "  ⚠️  Warning: $item not found in project directory"
+        fi
+      fi
+    done
+  else
+    echo "  ℹ️  No dotfiles selected. You can add them later with 'dotproj add <project>'"
+  fi
+}
+
+is_tracked() {
+  local file="$1"
+  local project="$2"
+  local dotfiles_dir="$DOTFILES_ROOT/$project/dotfiles"
+  local tracked_file="$dotfiles_dir/$file"
+  
+  [ -f "$tracked_file" ]
+}
+
+copy_dotfile() {
+  local src_file="$1"
+  local dest_dir="$2"
+  local project_path="$3"
+  
+  local rel_path
+  rel_path=$(get_relative_path "$src_file" "$project_path")
+  local dest_file="$dest_dir/$rel_path"
+  
+  mkdir -p "$(dirname "$dest_file")"
+  cp "$src_file" "$dest_file"
+}
+
+usage() {
+  echo "DotProj CLI - Manage project-specific dotfiles"
+  echo "Usage: dotproj <command> [project]"
+  echo "Commands:"
+  echo "  setup             Install DotProj and add to PATH"
+  echo "  init <project>    Initialize dotfiles for a project"
+  echo "  add <project>     Add more dotfiles to an existing project"
+  echo "  apply <project>   Apply dotfiles to the current environment"
+  echo "  save <project>    Save modified dotfiles to storage"
+  echo "  sync <project>    Commit and push/pull dotfiles to/from Git repo"
+  echo "  remove <project>  Remove a project and all its dotfiles"
+  echo "  list              List all projects"
+  echo "  status <project>  Show tracked and excluded dotfiles for a project"
+  echo "Use 'dotproj <command> --help' for more details"
+  exit 1
+}
+
+command_help() {
+  local cmd="$1"
+  case "$cmd" in
+    setup)
+      echo "dotproj setup: Installs DotProj and adds it to PATH"
+      echo "Adds ~/.dotproj/dotproj.sh to ~/.bashrc or ~/.zshrc"
+      ;;
+    init)
+      echo "dotproj init <project>: Initializes dotfiles for a project"
+      echo "Creates project storage and prompts for dotfiles selection"
+      echo "Prompts for project path and optional Git repo"
+      ;;
+    add)
+      echo "dotproj add <project>: Add more dotfiles to an existing project"
+      echo "Allows you to track additional dotfiles using comma-separated input"
+      ;;
+    apply)
+      echo "dotproj apply <project>: Applies dotfiles to the environment"
+      echo "Copies all tracked dotfiles from storage to their project locations"
+      ;;
+    save)
+      echo "dotproj save <project>: Saves modified dotfiles to storage"
+      echo "Updates storage with any changes made to tracked dotfiles"
+      ;;
+    sync)
+      echo "dotproj sync <project>: Syncs dotfiles with Git"
+      echo "Commits changes and pushes/pulls to/from remote repo (if configured)"
+      ;;
+    remove)
+      echo "dotproj remove <project>: Remove a project and all its dotfiles"
+      echo "Permanently deletes the project storage directory"
+      ;;
+    list)
+      echo "dotproj list: Lists all initialized projects"
+      ;;
+    status)
+      echo "dotproj status <project>: Shows tracked dotfiles for a project"
+      echo "Displays which files are being managed"
+      ;;
+    *)
+      usage
+      ;;
+  esac
+  exit 0
+}
+
+check_project() {
+  if [ -z "$PROJECT" ]; then
+    echo "Error: Project name required"
+    usage
+  fi
+}
+
+get_project_config() {
+  local project="$1"
+  local key="$2"
+  if [ -f "$CONFIG_FILE" ]; then
+    grep "^$project:$key:" "$CONFIG_FILE" | cut -d':' -f3-
+  fi
+}
+
+write_config() {
+  local project="$1"
+  local key="$2"
+  local value="$3"
+  mkdir -p "$(dirname "$CONFIG_FILE")"
+  if [ -f "$CONFIG_FILE" ]; then
+    grep -v "^$project:$key:" "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" || true
+    mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+  fi
+  echo "$project:$key:$value" >> "$CONFIG_FILE"
+}
+
+setup() {
+  if [ -f "$HOME/.dotproj/dotproj.sh" ]; then
+    echo "DotProj already installed at ~/.dotproj/dotproj.sh"
+  else
+    echo "Installing DotProj to ~/.dotproj/dotproj.sh..."
+    mkdir -p "$HOME/.dotproj"
+    cp "$0" "$HOME/.dotproj/dotproj.sh"
+    chmod +x "$HOME/.dotproj/dotproj.sh"
+  fi
+
+  shell_file="$HOME/.bashrc"
+  [ -f "$HOME/.zshrc" ] && shell_file="$HOME/.zshrc"
+  if ! grep -q "PATH.*\.dotproj" "$shell_file"; then
+    echo "Adding DotProj to PATH in $shell_file..."
+    echo 'export PATH="$HOME/.dotproj:$PATH"' >> "$shell_file"
+    echo "Please restart your terminal or run 'source $shell_file'"
+  else
+    echo "DotProj already in PATH"
+  fi
+  echo "Setup complete! Run 'dotproj --help' for commands"
+}
+
+init() {
+  check_project
+  local project_dir="$DOTFILES_ROOT/$PROJECT"
+
+  if [ -d "$project_dir" ]; then
+    echo "Error: Project '$PROJECT' already exists in $project_dir"
+    exit 1
+  fi
+
+  echo "Enter project path (default: $PWD):"
+  read -r project_path
+  project_path="${project_path:-$PWD}"
+  if [ ! -d "$project_path" ]; then
+    echo "Error: Directory $project_path does not exist"
+    exit 1
+  fi
+
+  echo ""
+  echo "🔗 Git Repository (Optional)"
+  echo "═══════════════════════════════════════════════════════════════"
+  echo "Enter Git repository URL to sync your dotfiles across machines:"
+  echo ""
+  echo "Examples:"
+  echo "  https://github.com/username/project-dotfiles.git"
+  echo "  git@gitlab.com:username/project-dotfiles.git"
+  echo "  https://bitbucket.org/username/project-dotfiles.git"
+  echo ""
+  echo -n "Git repo URL (press Enter to skip): "
+  read -r git_repo
+
+  echo "Creating project structure..."
+  mkdir -p "$project_dir/dotfiles"
+
+  echo "Initializing Git repo..."
+  cd "$project_dir" || exit 1
+  git init -q
+  
+  local branch_name="dotproj-$PROJECT"
+  git checkout -q -b "$branch_name"
+  
+  git add .
+  git commit -q -m "Initial dotfiles for $PROJECT"
+
+  write_config "$PROJECT" "dotfiles" "$project_dir"
+  write_config "$PROJECT" "path" "$project_path"
+  [ -n "$git_repo" ] && write_config "$PROJECT" "git" "$git_repo"
+  echo "Initialized project '$PROJECT' in $project_dir"
+
+  prompt_dotfiles_selection "$project_path" "$PROJECT"
+  
+  cd "$project_dir" || exit 1
+  git add .
+  git commit -q -m "Add selected dotfiles for $PROJECT"
+}
+
+add() {
+  check_project
+  local project_dir="$DOTFILES_ROOT/$PROJECT"
+  local project_path
+  project_path=$(get_project_config "$PROJECT" "path")
+
+  if [ ! -d "$project_dir" ]; then
+    echo "Error: Project '$PROJECT' not found in $DOTFILES_ROOT"
+    echo "Run 'dotproj init $PROJECT' first to create the project"
+    exit 1
+  fi
+
+  if [ -z "$project_path" ] || [ ! -d "$project_path" ]; then
+    echo "Error: Project path not configured or invalid"
+    exit 1
+  fi
+
+  echo "🔄 Adding dotfiles to existing project '$PROJECT'"
+  echo "════════════════════════════════════════════════════════════════"
+  
+  echo "Currently tracked dotfiles:"
+  if [ -d "$project_dir/dotfiles" ] && [ "$(find "$project_dir/dotfiles" -type f | wc -l)" -gt 0 ]; then
+    find "$project_dir/dotfiles" -type f | while IFS= read -r file; do
+      rel_path="${file#$project_dir/dotfiles/}"
+      echo "  ✅ $rel_path"
+    done
+  else
+    echo "  (none)"
+  fi
+  
+  prompt_dotfiles_selection "$project_path" "$PROJECT"
+  
+  cd "$project_dir" || exit 1
+  
+  local branch_name="dotproj-$PROJECT"
+  current_branch=$(git branch --show-current 2>/dev/null || echo "")
+  if [ "$current_branch" != "$branch_name" ]; then
+    git checkout -q "$branch_name" 2>/dev/null || git checkout -q -b "$branch_name"
+  fi
+  
+  git add .
+  git commit -q -m "Add new dotfiles to $PROJECT" 2>/dev/null || echo "No new files to commit"
+  
+  echo ""
+  echo "✅ Successfully added dotfiles to '$PROJECT'"
+}
+
+remove() {
+  check_project
+  local project_dir="$DOTFILES_ROOT/$PROJECT"
+
+  if [ ! -d "$project_dir" ]; then
+    echo "Error: Project '$PROJECT' not found in $DOTFILES_ROOT"
+    exit 1
+  fi
+
+  echo "🗑️  Remove Project '$PROJECT'"
+  echo "════════════════════════════════════════════════════════════════"
+  echo "This will permanently delete:"
+  echo "  - Project storage: $project_dir"
+  echo "  - All tracked dotfiles for this project"
+  echo "  - Configuration entries"
+  echo ""
+  echo "⚠️  Warning: This action cannot be undone!"
+  echo ""
+  echo -n "Are you sure you want to remove project '$PROJECT'? (type 'yes' to confirm): "
+  read -r confirmation
+
+  if [ "$confirmation" = "yes" ]; then
+    rm -rf "$project_dir"
+    
+    if [ -f "$CONFIG_FILE" ]; then
+      grep -v "^$PROJECT:" "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" 2>/dev/null || true
+      mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE" 2>/dev/null || rm -f "${CONFIG_FILE}.tmp"
+    fi
+    
+    echo "✅ Project '$PROJECT' has been successfully removed"
+  else
+    echo "❌ Project removal cancelled"
+  fi
+}
+
+apply() {
+  check_project
+  local project_dir="$DOTFILES_ROOT/$PROJECT"
+  local dotfiles_dir="$project_dir/dotfiles"
+  local project_path
+  project_path=$(get_project_config "$PROJECT" "path")
+
+  if [ ! -d "$project_dir" ]; then
+    echo "Error: Project '$PROJECT' not found in $DOTFILES_ROOT"
+    exit 1
+  fi
+
+  if [ -z "$project_path" ] || [ ! -d "$project_path" ]; then
+    echo "Error: Project path not configured or invalid"
+    echo "Set path with 'dotproj init $PROJECT' or edit $CONFIG_FILE"
+    exit 1
+  fi
+
+  echo "📋 Applying dotfiles for '$PROJECT'..."
+
+  if [ -d "$dotfiles_dir" ] && [ "$(find "$dotfiles_dir" -type f | wc -l)" -gt 0 ]; then
+    echo "  Applying tracked dotfiles..."
+    find "$dotfiles_dir" -type f | while IFS= read -r stored_file; do
+      rel_path="${stored_file#$dotfiles_dir/}"
+      target_file="$project_path/$rel_path"
+      
+      mkdir -p "$(dirname "$target_file")"
+      
+      if [ -f "$target_file" ] && ! cmp -s "$stored_file" "$target_file" 2>/dev/null; then
+        backup_file="$target_file.backup.$(date +%s)"
+        cp "$target_file" "$backup_file"
+        echo "    📦 Backed up existing: $rel_path -> ${backup_file##*/}"
+      fi
+      
+      cp "$stored_file" "$target_file"
+      echo "    ✅ Applied: $rel_path"
+    done
+  else
+    echo "  ℹ️  No dotfiles are currently tracked for this project"
+    echo "    Use 'dotproj add $PROJECT' to track some dotfiles first"
+  fi
+  
+  echo "✅ Applied dotfiles for '$PROJECT'"
+}
+
+save() {
+  check_project
+  local project_dir="$DOTFILES_ROOT/$PROJECT"
+  local dotfiles_dir="$project_dir/dotfiles"
+  local project_path
+  project_path=$(get_project_config "$PROJECT" "path")
+
+  if [ ! -d "$project_dir" ]; then
+    echo "Error: Project '$PROJECT' not found in $DOTFILES_ROOT"
+    exit 1
+  fi
+
+  if [ -z "$project_path" ] || [ ! -d "$project_path" ]; then
+    echo "Error: Project path not configured or invalid"
+    exit 1
+  fi
+
+  echo "💾 Saving dotfiles for '$PROJECT'..."
+
+  if [ -d "$dotfiles_dir" ] && [ "$(find "$dotfiles_dir" -type f | wc -l)" -gt 0 ]; then
+    echo "  Scanning for modified tracked dotfiles..."
+    local saved_count=0
+    
+    find "$dotfiles_dir" -type f | while IFS= read -r stored_file; do
+      rel_path="${stored_file#$dotfiles_dir/}"
+      source_file="$project_path/$rel_path"
+      
+      if [ -f "$source_file" ]; then
+        if ! cmp -s "$source_file" "$stored_file" 2>/dev/null; then
+          echo "    ✅ Updated: $rel_path"
+          copy_dotfile "$source_file" "$dotfiles_dir" "$project_path"
+          saved_count=$((saved_count + 1))
+        fi
+      else
+        echo "    ⚠️  Warning: $rel_path no longer exists in project"
+      fi
+    done
+  else
+    echo "  ℹ️  No dotfiles are currently tracked for this project"
+    echo "    Use 'dotproj add $PROJECT' to track some dotfiles"
+  fi
+  
+  echo "✅ Saved dotfiles for '$PROJECT'"
+}
+
+sync() {
+  check_project
+  local project_dir="$DOTFILES_ROOT/$PROJECT"
+  local git_repo
+  git_repo=$(get_project_config "$PROJECT" "git")
+  local branch_name="dotproj-$PROJECT"
+
+  if [ ! -d "$project_dir" ]; then
+    echo "Error: Project '$PROJECT' not found in $DOTFILES_ROOT"
+    exit 1
+  fi
+
+  echo "🔄 Syncing dotfiles for '$PROJECT'..."
+  cd "$project_dir" || exit 1
+  
+  current_branch=$(git branch --show-current 2>/dev/null || echo "")
+  if [ "$current_branch" != "$branch_name" ]; then
+    if git show-ref --verify --quiet "refs/heads/$branch_name"; then
+      echo "  Switching to branch: $branch_name"
+      git checkout -q "$branch_name"
+    else
+      echo "  Creating and switching to branch: $branch_name"
+      git checkout -q -b "$branch_name"
+    fi
+  fi
+
+  echo "  Committing changes..."
+  git add .
+  if git commit -q -m "Sync dotfiles for $PROJECT - $(date '+%Y-%m-%d %H:%M:%S')" 2>/dev/null; then
+    echo "  ✅ Changes committed"
+  else
+    echo "  ℹ️  No changes to commit"
+  fi
+
+  if [ -n "$git_repo" ]; then
+    echo "  🌐 Syncing with remote repository..."
+    
+    if ! git remote get-url origin >/dev/null 2>&1; then
+      echo "  Setting up remote: $git_repo"
+      git remote add origin "$git_repo"
+    fi
+
+    echo "  Fetching from remote..."
+    if git fetch origin 2>/dev/null; then
+      if git show-ref --verify --quiet "refs/remotes/origin/$branch_name"; then
+        echo "  Merging with remote branch: $branch_name"
+        if ! git merge "origin/$branch_name" --no-edit -q 2>/dev/null; then
+          echo "  ⚠️  Merge conflict detected. Please resolve manually:"
+          echo "     cd $project_dir"
+          echo "     git status"
+          echo "     # Resolve conflicts, then:"
+          echo "     git add ."
+          echo "     git commit"
+          echo "     dotproj sync $PROJECT"
+          return 1
+        fi
+      else
+        echo "  Setting upstream for new branch: $branch_name"
+        git push -u origin "$branch_name" 2>/dev/null || {
+          echo "  ⚠️  Failed to push new branch. The remote may be empty or have permission issues."
+          echo "     Please check your repository access and try again."
+          return 1
+        }
+      fi
+    else
+      echo "  Remote appears to be empty, pushing initial content..."
+      if git push -u origin "$branch_name" 2>/dev/null; then
+        echo "  ✅ Successfully pushed to new remote repository"
+      else
+        echo "  ⚠️  Failed to push to remote. Please check:"
+        echo "     - Repository URL: $git_repo"
+        echo "     - Your access permissions"
+        echo "     - Repository exists and is accessible"
+        return 1
+      fi
+    fi
+
+    echo "  Pushing local changes..."
+    if git push origin "$branch_name" 2>/dev/null; then
+      echo "  ✅ Successfully synced with remote"
+    else
+      echo "  ⚠️  Push failed. You may need to pull and resolve conflicts first."
+    fi
+  else
+    echo "  ℹ️  No remote Git repo configured, local commit only"
+    echo "     Set Git repo during 'dotproj init $PROJECT' or edit $CONFIG_FILE"
+  fi
+  
+  echo "✅ Sync completed for '$PROJECT'"
+}
+
+status() {
+  check_project
+  local project_dir="$DOTFILES_ROOT/$PROJECT"
+  local dotfiles_dir="$project_dir/dotfiles"
+  local project_path
+  project_path=$(get_project_config "$PROJECT" "path")
+  local git_repo
+  git_repo=$(get_project_config "$PROJECT" "git")
+
+  if [ ! -d "$project_dir" ]; then
+    echo "Error: Project '$PROJECT' not found in $DOTFILES_ROOT"
+    exit 1
+  fi
+
+  echo "📊 Status for project '$PROJECT'"
+  echo "════════════════════════════════════════════════════════════════"
+  echo "Project path: $project_path"
+  echo "Storage path: $project_dir"
+  [ -n "$git_repo" ] && echo "Git repo: $git_repo" || echo "Git repo: (not configured)"
+  echo ""
+
+  if [ -d "$dotfiles_dir" ] && [ "$(find "$dotfiles_dir" -type f | wc -l)" -gt 0 ]; then
+    echo "📁 Tracked dotfiles:"
+    find "$dotfiles_dir" -type f | while IFS= read -r file; do
+      rel_path="${file#$dotfiles_dir/}"
+      echo "  ✅ $rel_path"
+    done
+  else
+    echo "📁 No dotfiles are currently tracked."
+    echo "    Use 'dotproj add $PROJECT' to add some dotfiles."
+  fi
+
+  echo ""
+  echo "💡 Available commands:"
+  echo "    dotproj add $PROJECT     - Add more dotfiles"
+  echo "    dotproj save $PROJECT    - Save changes to tracked files"
+  echo "    dotproj apply $PROJECT   - Apply dotfiles to project"
+  echo "    dotproj sync $PROJECT    - Sync with Git repository"
+}
+
+list() {
+  if [ -f "$CONFIG_FILE" ]; then
+    echo "Available projects:"
+    grep '^[^:]*:dotfiles:' "$CONFIG_FILE" | cut -d':' -f1 | sort -u | while read -r proj; do
+      echo "- $proj"
+    done
+  else
+    echo "No projects found. Run 'dotproj init <project>' to create one."
+  fi
+}
+
+case "$CMD" in
+  setup)
+    [ "$2" = "--help" ] && command_help setup
+    setup
+    ;;
+  init)
+    [ "$2" = "--help" ] && command_help init
+    init
+    ;;
+  add)
+    [ "$2" = "--help" ] && command_help add
+    add
+    ;;
+  apply)
+    [ "$2" = "--help" ] && command_help apply
+    apply
+    ;;
+  save)
+    [ "$2" = "--help" ] && command_help save
+    save
+    ;;
+  sync)
+    [ "$2" = "--help" ] && command_help sync
+    sync
+    ;;
+  remove)
+    [ "$2" = "--help" ] && command_help remove
+    remove
+    ;;
+  list)
+    [ "$2" = "--help" ] && command_help list
+    list
+    ;;
+  status)
+    [ "$2" = "--help" ] && command_help status
+    status
+    ;;
+  --help)
+    usage
+    ;;
+  *)
+    usage
+    ;;
+esac
