@@ -19,17 +19,17 @@
 #### Option 1: Installation Script (Recommended)
 ```bash
 # One command to install everything
-curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/install.sh | bash
 
 # Then restart your terminal or source your shell config
 source ~/.bashrc  # or ~/.zshrc
 ```
-*Note: This downloads the install script which then fetches the main dotproj script from the repository.*
+*Note: This downloads the install script which then fetches the master dotproj script from the repository.*
 
 #### Option 2: One-Line Install
 ```bash
 # Download, install, and cleanup in one command (most reliable)
-curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/main/dotproj -o dotproj && chmod +x dotproj && ./dotproj setup && rm dotproj
+curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/dotproj -o dotproj && chmod +x dotproj && ./dotproj setup && rm dotproj
 
 # Restart your terminal
 source ~/.bashrc  # or ~/.zshrc
@@ -38,10 +38,10 @@ source ~/.bashrc  # or ~/.zshrc
 #### Option 3: Direct to PATH
 ```bash
 # Install directly to your local bin (no setup needed)
-curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/main/dotproj -o ~/.local/bin/dotproj && chmod +x ~/.local/bin/dotproj
+curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/dotproj -o ~/.local/bin/dotproj && chmod +x ~/.local/bin/dotproj
 
 # Or system-wide install (requires sudo)
-sudo curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/main/dotproj -o /usr/local/bin/dotproj && sudo chmod +x /usr/local/bin/dotproj
+sudo curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/dotproj -o /usr/local/bin/dotproj && sudo chmod +x /usr/local/bin/dotproj
 ```
 
 ### Basic Usage

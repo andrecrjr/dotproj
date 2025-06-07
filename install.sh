@@ -1,6 +1,6 @@
 #!/bin/bash
 echo "Installing DotProj..."
-curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/main/dotproj -o dotproj
+curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/dotproj -o dotproj
 chmod +x dotproj
 ./dotproj setup
 rm dotproj
