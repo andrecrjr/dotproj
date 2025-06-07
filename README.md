@@ -66,11 +66,11 @@ dotproj sync team-project     # Pushes to remote repo
 
 **Team member 2+ - Load and use**:
 ```bash
-# 1. Load from team's repository
-dotproj remote team-project https://github.com/team/project-config.git
+# 1. Go to your project directory
+cd /path/to/your-project
 
-# 2. Apply to your project
-dotproj apply team-project    # Creates symlinks from team's files
+# 2. Load team's configurations (automatically applies to current project)
+dotproj remote team-project https://github.com/team/project-config.git
 
 # 3. Work and sync changes
 # Edit files normally...
@@ -82,9 +82,9 @@ dotproj sync team-project     # Commits and pushes your changes
 ```bash
 # Essential Commands
 dotproj init <project>           # Create new project (includes file selection + symlinks)
-dotproj remote <project> <url>   # Load from team repository
+dotproj remote <project> <url>   # Load from team repository + auto-apply to current dir
 dotproj add <project>            # Add more files + create symlinks
-dotproj apply <project>          # Create symlinks from stored files (for remote projects)
+dotproj apply <project>          # Create symlinks from stored files (manual re-apply)
 dotproj sync <project>           # Commit and push/pull changes
 
 # Management

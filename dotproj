@@ -439,24 +439,18 @@ remote() {
   fi
 
   echo ""
-  echo "🎯 Initializing '$PROJECT' from remote repository..."
+  echo "🎯 Loading '$PROJECT' from remote repository..."
   echo "Repository: $git_repo"
   echo "════════════════════════════════════════════════════════════════"
 
-  # Get project path
-  echo "Enter project path where dotfiles should be applied (default: $PWD):"
-  read -r project_path
-  project_path="${project_path:-$PWD}"
-  if [ ! -d "$project_path" ]; then
-    echo "Error: Directory $project_path does not exist"
-    exit 1
-  fi
+  # Use current directory as project path
+  local project_path="$PWD"
+  echo "Project path: $project_path"
 
-  echo "📥 Cloning remote repository..."
-  local temp_dir="/tmp/dotproj-remote-$$"
+  echo "📥 Cloning remote repository to dotproj storage..."
   
-  # Clone the repository
-  if ! git clone "$git_repo" "$temp_dir" 2>/dev/null; then
+  # Clone directly to the dotproj storage directory
+  if ! git clone "$git_repo" "$project_dir" 2>/dev/null; then
     echo "❌ Failed to clone repository: $git_repo"
     echo ""
     echo "Please check:"
@@ -472,26 +466,36 @@ remote() {
     exit 1
   fi
 
-  echo "🔍 Analyzing remote repository structure..."
+  echo "🔍 Analyzing repository structure..."
   
   # Check if it's a valid dotproj repository
-  if [ ! -d "$temp_dir/dotfiles" ]; then
+  if [ ! -d "$project_dir/dotfiles" ]; then
     echo "❌ This doesn't appear to be a valid dotproj repository"
     echo "Expected structure: repository/dotfiles/"
     echo "Current structure:"
-    ls -la "$temp_dir"
-    rm -rf "$temp_dir"
+    ls -la "$project_dir"
+    echo ""
+    echo "🔧 How to fix this:"
+    echo "  The repository needs to be created with dotproj first."
+    echo ""
+    echo "  Option 1 - Create the dotproj structure:"
+    echo "    1. dotproj init $PROJECT"
+    echo "    2. When prompted for Git repo: $git_repo"
+    echo "    3. Select your config files"
+    echo "    4. dotproj sync $PROJECT"
+    echo ""
+    echo "  Option 2 - If this repository should have dotfiles:"
+    echo "    1. Check if you're using the correct repository URL"
+    echo "    2. Ensure the repository was created with 'dotproj init' and 'dotproj sync'"
+    echo "    3. Verify the repository contains a 'dotfiles/' directory"
+    echo ""
+    echo "💡 Note: dotproj remote loads existing configurations."
+    echo "   Use 'dotproj init' to create new configurations."
+    rm -rf "$project_dir"
     exit 1
   fi
 
   echo "✅ Valid dotproj repository found!"
-  
-  # Create the project structure
-  echo "📁 Creating project structure..."
-  mkdir -p "$project_dir"
-  
-  # Copy the entire repository to the project directory
-  cp -r "$temp_dir/." "$project_dir/"
   
   # Ensure we're on the correct branch
   cd "$project_dir" || exit 1
@@ -520,14 +524,15 @@ remote() {
   write_config "$PROJECT" "path" "$project_path"
   write_config "$PROJECT" "git" "$git_repo"
 
-  echo "✅ Successfully initialized '$PROJECT' from remote repository"
+  echo "✅ Successfully loaded '$PROJECT' from remote repository"
   echo ""
 
   # Show what was loaded
   echo "📋 Loaded dotfiles:"
-  if [ -d "$project_dir/dotfiles" ] && [ "$(find "$project_dir/dotfiles" -type f | wc -l)" -gt 0 ]; then
-    find "$project_dir/dotfiles" -type f | while IFS= read -r file; do
-      rel_path="${file#$project_dir/dotfiles/}"
+  local dotfiles_dir="$project_dir/dotfiles"
+  if [ -d "$dotfiles_dir" ] && [ "$(find "$dotfiles_dir" -type f | wc -l)" -gt 0 ]; then
+    find "$dotfiles_dir" -type f | while IFS= read -r file; do
+      rel_path="${file#$dotfiles_dir/}"
       echo "  ✅ $rel_path"
     done
   else
@@ -535,21 +540,32 @@ remote() {
   fi
 
   echo ""
-  echo "🎉 Remote initialization complete!"
+  echo "🔗 Applying configurations to current project..."
+  
+  # Automatically apply the configurations
+  if [ -d "$dotfiles_dir" ] && [ "$(find "$dotfiles_dir" -type f | wc -l)" -gt 0 ]; then
+    find "$dotfiles_dir" -type f | while IFS= read -r stored_file; do
+      rel_path="${stored_file#$dotfiles_dir/}"
+      target_file="$project_path/$rel_path"
+      
+      mkdir -p "$(dirname "$target_file")"
+      create_symlink "$stored_file" "$target_file" "$rel_path" "$project_dir"
+      echo "    🔗 Linked: $rel_path"
+    done
+  fi
+
   echo ""
-  echo "📋 Next steps:"
-  echo "  1. Review loaded dotfiles: dotproj status $PROJECT"
-  echo "  2. Apply to your project: dotproj apply $PROJECT"
-  echo "  3. Make changes and save: dotproj save $PROJECT"
-  echo "  4. Sync with remote: dotproj sync $PROJECT"
+  echo "🎉 Remote setup complete!"
   echo ""
   echo "💡 Project details:"
   echo "   Storage: $project_dir"
   echo "   Target:  $project_path"
   echo "   Remote:  $git_repo"
-
-  # Clean up
-  rm -rf "$temp_dir"
+  echo ""
+  echo "📋 Available commands:"
+  echo "   dotproj status $PROJECT    - Show tracked files"
+  echo "   dotproj add $PROJECT       - Add more files"
+  echo "   dotproj sync $PROJECT      - Sync changes with remote"
 }
 
 add() {
