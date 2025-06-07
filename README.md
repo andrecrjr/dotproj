@@ -366,7 +366,17 @@ DotProj is designed to be simple and extensible. Feel free to:
 
 ## 📄 License
 
-This project is open source. Feel free to use, modify, and distribute according to your needs.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+Copyright (c) 2024 Andre Jr (andrecrjr)
+
+The MIT License allows you to:
+- ✅ Use the software for any purpose
+- ✅ Modify and distribute the software
+- ✅ Include it in commercial projects
+- ✅ Sublicense the software
+
+**Requirements**: Include the original copyright notice and license in any copy or substantial portion of the software.
 
 ---
 
