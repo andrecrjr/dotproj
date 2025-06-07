@@ -37,7 +37,7 @@ DotProj addresses the challenge of managing various configuration and other proj
 ## ✨ Features
 
 - 📁 **Project-Specific Management**: Track different dotfiles for each project
-- 🔄 **Git Integration**: Version control and sync dotfiles across machines
+- 🔄 **Git Integration**: Full version control and sync dotfiles across machines (requires Git)
 - 🎨 **Interactive Setup**: User-friendly prompts for selecting dotfiles to track
 - 🔧 **Flexible Configuration**: Support for any file type (.env, .vscode, .eslintrc, etc.)
 - 🔗 **Symlink Management**: Real-time sync between project and storage via symlinks
@@ -46,6 +46,23 @@ DotProj addresses the challenge of managing various configuration and other proj
 - 📊 **Status Tracking**: Monitor which files are tracked and their current state
 
 ## 🚀 Quick Start
+
+### Prerequisites
+
+**DotProj requires Git to be installed on your system** for version control and synchronization features.
+
+**Install Git:**
+- **Ubuntu/Debian**: `sudo apt update && sudo apt install git`
+- **CentOS/RHEL**: `sudo yum install git`
+- **Fedora**: `sudo dnf install git`
+- **macOS**: `brew install git` (or install Xcode Command Line Tools)
+- **Arch Linux**: `sudo pacman -S git`
+
+**Configure Git (if not already done):**
+```bash
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+```
 
 ### Installation
 
@@ -325,6 +342,28 @@ your-dotfiles-repo/
 ## 🔍 Troubleshooting
 
 ### Common Issues
+
+**Git not installed:**
+```bash
+# If you see "Git is required but not installed"
+# Install Git first, then run dotproj again
+
+# Ubuntu/Debian
+sudo apt update && sudo apt install git
+
+# CentOS/RHEL
+sudo yum install git
+
+# Fedora
+sudo dnf install git
+
+# macOS
+brew install git
+
+# Configure Git
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+```
 
 **Command not found after setup:**
 ```bash

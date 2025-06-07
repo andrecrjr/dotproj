@@ -9,6 +9,50 @@ PROJECT="$2"
 
 mkdir -p "$DOTFILES_ROOT"
 
+# Check if Git is available
+check_git() {
+  if ! command -v git >/dev/null 2>&1; then
+    echo "❌ Error: Git is required but not installed."
+    echo ""
+    echo "📦 Please install Git first:"
+    echo "  • Ubuntu/Debian: sudo apt update && sudo apt install git"
+    echo "  • CentOS/RHEL:   sudo yum install git"
+    echo "  • Fedora:        sudo dnf install git"
+    echo "  • macOS:         brew install git (or install Xcode Command Line Tools)"
+    echo "  • Arch Linux:    sudo pacman -S git"
+    echo ""
+    echo "DotProj requires Git for version control and synchronization."
+    exit 1
+  fi
+}
+
+# Check Git configuration and provide setup guidance
+check_git_config() {
+  local git_name
+  local git_email
+  
+  git_name=$(git config --global user.name 2>/dev/null || echo "")
+  git_email=$(git config --global user.email 2>/dev/null || echo "")
+  
+  if [ -z "$git_name" ] || [ -z "$git_email" ]; then
+    echo "⚠️  Git is not fully configured for commits."
+    echo ""
+    echo "🔧 Please configure Git with your name and email:"
+    echo "   git config --global user.name \"Your Name\""
+    echo "   git config --global user.email \"your.email@example.com\""
+    echo ""
+    echo "This is required for Git commits and synchronization."
+    echo ""
+    echo -n "Continue anyway? (y/N): "
+    read -r continue_choice
+    if [ "$continue_choice" != "y" ] && [ "$continue_choice" != "Y" ]; then
+      echo "Setup cancelled. Please configure Git and try again."
+      exit 1
+    fi
+    echo ""
+  fi
+}
+
 get_relative_path() {
   local file="$1"
   local project_path="$2"
@@ -153,8 +197,31 @@ usage() {
   echo "  remove <project>    Remove a project and all its dotfiles"
   echo "  list                List all projects"
   echo "  status <project>    Show tracked and excluded dotfiles for a project"
+  echo "  version             Show version and system information"
   echo "Use 'dotproj <command> --help' for more details"
   exit 1
+}
+
+version() {
+  echo "🎯 DotProj - Project-Specific Dotfiles Manager"
+  echo "Version: 1.0.0"
+  echo ""
+  echo "📋 System Information:"
+  echo "  OS: $(uname -s)"
+  echo "  Shell: $SHELL"
+  if command -v git >/dev/null 2>&1; then
+    echo "  Git: $(git --version)"
+    local git_name git_email
+    git_name=$(git config --global user.name 2>/dev/null || echo "Not configured")
+    git_email=$(git config --global user.email 2>/dev/null || echo "Not configured")
+    echo "  Git User: $git_name <$git_email>"
+  else
+    echo "  Git: ❌ Not installed"
+  fi
+  echo ""
+  echo "📁 DotProj Paths:"
+  echo "  Config: $CONFIG_FILE"
+  echo "  Storage: $DOTFILES_ROOT"
 }
 
 command_help() {
@@ -202,6 +269,10 @@ command_help() {
       echo "dotproj status <project>: Shows tracked dotfiles for a project"
       echo "Displays which files are being managed"
       ;;
+    version)
+      echo "dotproj version: Shows version and system information"
+      echo "Displays DotProj version, Git status, and configuration paths"
+      ;;
     *)
       usage
       ;;
@@ -237,6 +308,8 @@ write_config() {
 }
 
 setup() {
+  check_git
+  
   # Create dotproj directory
   mkdir -p "$HOME/.dotproj"
   
@@ -268,6 +341,8 @@ setup() {
 
 init() {
   check_project
+  check_git
+  check_git_config
   local project_dir="$DOTFILES_ROOT/$PROJECT"
 
   if [ -d "$project_dir" ]; then
@@ -326,6 +401,8 @@ init() {
 
 remote() {
   check_project
+  check_git
+  check_git_config
   local project_dir="$DOTFILES_ROOT/$PROJECT"
   local git_repo="$3"
 
@@ -375,10 +452,17 @@ remote() {
   # Clone the repository
   if ! git clone "$git_repo" "$temp_dir" 2>/dev/null; then
     echo "❌ Failed to clone repository: $git_repo"
+    echo ""
     echo "Please check:"
     echo "  - Repository URL is correct"
     echo "  - You have access to the repository"
     echo "  - Repository exists and is accessible"
+    echo "  - Your internet connection is working"
+    echo "  - Git is properly configured with credentials (if private repo)"
+    echo ""
+    echo "💡 For private repositories, you may need to:"
+    echo "   - Set up SSH keys: https://docs.github.com/en/authentication/connecting-to-github-with-ssh"
+    echo "   - Or use personal access tokens for HTTPS"
     exit 1
   fi
 
@@ -646,6 +730,7 @@ save() {
 
 sync() {
   check_project
+  check_git
   local project_dir="$DOTFILES_ROOT/$PROJECT"
   local git_repo
   git_repo=$(get_project_config "$PROJECT" "git")
@@ -826,6 +911,9 @@ case "$CMD" in
   status)
     [ "$2" = "--help" ] && command_help status
     status
+    ;;
+  version)
+    version
     ;;
   --help)
     usage
