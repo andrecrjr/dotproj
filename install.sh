@@ -39,11 +39,16 @@ echo "✅ Git version: $(git --version)"
 echo "✅ curl is available"
 echo ""
 
-# Download the dotproj script
+# Download the dotproj script and VERSION file
 echo "📥 Downloading dotproj script..."
 if ! curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/dotproj -o dotproj; then
     echo "❌ Failed to download dotproj script"
     exit 1
+fi
+
+echo "📥 Downloading version information..."
+if ! curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/VERSION -o VERSION; then
+    echo "⚠️  Failed to download VERSION file, using fallback version"
 fi
 
 # Make it executable
@@ -57,8 +62,8 @@ if ! ./dotproj setup; then
     exit 1
 fi
 
-# Clean up the temporary downloaded file (the script is now installed in ~/.dotproj/)
-rm -f dotproj
+# Clean up the temporary downloaded files (the script is now installed in ~/.dotproj/)
+rm -f dotproj VERSION
 
 echo ""
 echo "🎉 Installation complete!"
