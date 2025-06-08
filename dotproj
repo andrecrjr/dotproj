@@ -1039,7 +1039,7 @@ update() {
   local temp_script
   temp_script=$(mktemp)
   
-  if ! curl -fsSL "https://raw.githubusercontent.com/andrecrjr/dotproj/master/update.sh" -o "$temp_script"; then
+  if ! curl -fsSL "https://raw.githubusercontent.com/andrecrjr/dotproj/feature/git-full-integration/update.sh" -o "$temp_script"; then
     echo "❌ Failed to download update script"
     echo ""
     echo "Please check:"
