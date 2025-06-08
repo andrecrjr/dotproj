@@ -11,9 +11,8 @@
     ```
 * **Curl** must be installed.
 
---- 
 
-**Quick Install for Linux and macOS**:
+* **Quick Install for Linux and macOS**:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/install.sh | bash
 ```
