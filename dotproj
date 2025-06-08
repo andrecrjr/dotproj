@@ -195,7 +195,7 @@ usage() {
   echo "Commands:"
   echo "  setup               Install DotProj and add to PATH"
   echo "  init <project>      Initialize dotfiles for a project"
-  echo "  remote <project>    Initialize from a remote dotproj repository"
+  echo "  remote <project>    Initialize from a remote repository and apply symlinks"
   echo "  add <project>       Add more dotfiles to an existing project"
   echo "  apply <project>     Apply dotfiles as symlinks to the current environment"
   echo "  save <project>      Check dotfile symlink integrity (changes auto-saved)"
@@ -243,8 +243,8 @@ command_help() {
       echo "Prompts for project path and optional Git repo"
       ;;
     remote)
-      echo "dotproj remote <project>: Initialize from a remote dotproj repository"
-      echo "Clones the repository and sets up the project with all dotfiles"
+      echo "dotproj remote <project>: Initialize from a remote repository"
+      echo "Clones the repository to dotproj storage and applies symlinks to current directory"
       echo "Usage: dotproj remote <project> [git-repo-url]"
       echo "If no URL provided, will prompt for repository URL"
       ;;
@@ -420,9 +420,9 @@ remote() {
   # Get Git repository URL if not provided
   if [ -z "$git_repo" ]; then
     echo ""
-    echo "🌐 Remote DotProj Repository"
+    echo "🌐 Remote Repository Setup"
     echo "═══════════════════════════════════════════════════════════════"
-    echo "Enter the Git repository URL containing the dotproj configuration:"
+    echo "Enter the Git repository URL containing the dotfiles:"
     echo ""
     echo "Examples:"
     echo "  https://github.com/username/my-dotfiles.git"
@@ -438,16 +438,16 @@ remote() {
     fi
   fi
 
-  echo ""
-  echo "🎯 Loading '$PROJECT' from remote repository..."
-  echo "Repository: $git_repo"
-  echo "════════════════════════════════════════════════════════════════"
-
   # Use current directory as project path
   local project_path="$PWD"
-  echo "Project path: $project_path"
 
-  echo "📥 Cloning remote repository to dotproj storage..."
+  echo ""
+  echo "🎯 Setting up '$PROJECT' from remote repository..."
+  echo "Repository: $git_repo"
+  echo "Project path: $project_path"
+  echo "════════════════════════════════════════════════════════════════"
+
+  echo "📥 Cloning repository to dotproj storage..."
   
   # Clone directly to the dotproj storage directory
   if ! git clone "$git_repo" "$project_dir" 2>/dev/null; then
@@ -459,111 +459,68 @@ remote() {
     echo "  - Repository exists and is accessible"
     echo "  - Your internet connection is working"
     echo "  - Git is properly configured with credentials (if private repo)"
-    echo ""
-    echo "💡 For private repositories, you may need to:"
-    echo "   - Set up SSH keys: https://docs.github.com/en/authentication/connecting-to-github-with-ssh"
-    echo "   - Or use personal access tokens for HTTPS"
     exit 1
   fi
 
-  echo "🔍 Analyzing repository structure..."
-  
-  # Check if it's a valid dotproj repository
-  if [ ! -d "$project_dir/dotfiles" ]; then
-    echo "❌ This doesn't appear to be a valid dotproj repository"
-    echo "Expected structure: repository/dotfiles/"
-    echo "Current structure:"
-    ls -la "$project_dir"
-    echo ""
-    echo "🔧 How to fix this:"
-    echo "  The repository needs to be created with dotproj first."
-    echo ""
-    echo "  Option 1 - Create the dotproj structure:"
-    echo "    1. dotproj init $PROJECT"
-    echo "    2. When prompted for Git repo: $git_repo"
-    echo "    3. Select your config files"
-    echo "    4. dotproj sync $PROJECT"
-    echo ""
-    echo "  Option 2 - If this repository should have dotfiles:"
-    echo "    1. Check if you're using the correct repository URL"
-    echo "    2. Ensure the repository was created with 'dotproj init' and 'dotproj sync'"
-    echo "    3. Verify the repository contains a 'dotfiles/' directory"
-    echo ""
-    echo "💡 Note: dotproj remote loads existing configurations."
-    echo "   Use 'dotproj init' to create new configurations."
-    rm -rf "$project_dir"
-    exit 1
-  fi
-
-  echo "✅ Valid dotproj repository found!"
-  
-  # Ensure we're on the correct branch
-  cd "$project_dir" || exit 1
-  
-  # Ensure .gitignore excludes backups
-  ensure_gitignore "$project_dir"
-  
-  local branch_name="dotproj-$PROJECT"
-  
-  # Check if the remote has a branch with our project name, otherwise use current branch
-  if git show-ref --verify --quiet "refs/remotes/origin/$branch_name"; then
-    echo "🔀 Switching to project branch: $branch_name"
-    git checkout -q "$branch_name"
-  elif git show-ref --verify --quiet "refs/heads/$branch_name"; then
-    echo "🔀 Switching to existing local branch: $branch_name"
-    git checkout -q "$branch_name"
-  else
-    # Create a new branch from current branch
-    current_branch=$(git branch --show-current 2>/dev/null || echo "main")
-    echo "🆕 Creating new project branch: $branch_name (from $current_branch)"
-    git checkout -q -b "$branch_name"
-  fi
+  echo "✅ Repository cloned successfully!"
 
   # Write configuration
   write_config "$PROJECT" "dotfiles" "$project_dir"
   write_config "$PROJECT" "path" "$project_path"
   write_config "$PROJECT" "git" "$git_repo"
 
-  echo "✅ Successfully loaded '$PROJECT' from remote repository"
-  echo ""
+  # Ensure .gitignore excludes backups
+  ensure_gitignore "$project_dir"
 
-  # Show what was loaded
-  echo "📋 Loaded dotfiles:"
-  local dotfiles_dir="$project_dir/dotfiles"
-  if [ -d "$dotfiles_dir" ] && [ "$(find "$dotfiles_dir" -type f | wc -l)" -gt 0 ]; then
-    find "$dotfiles_dir" -type f | while IFS= read -r file; do
-      rel_path="${file#$dotfiles_dir/}"
-      echo "  ✅ $rel_path"
-    done
-  else
-    echo "  ⚠️  No dotfiles found in the repository"
+  # Switch to project branch if it exists
+  cd "$project_dir" || exit 1
+  local branch_name="dotproj-$PROJECT"
+  
+  if git show-ref --verify --quiet "refs/remotes/origin/$branch_name"; then
+    echo "🔀 Switching to project branch: $branch_name"
+    git checkout -q "$branch_name"
+  elif git show-ref --verify --quiet "refs/heads/$branch_name"; then
+    echo "🔀 Switching to existing local branch: $branch_name"
+    git checkout -q "$branch_name"
   fi
 
   echo ""
-  echo "🔗 Applying configurations to current project..."
+  echo "🔗 Applying dotfiles to current project..."
   
-  # Automatically apply the configurations
-  if [ -d "$dotfiles_dir" ] && [ "$(find "$dotfiles_dir" -type f | wc -l)" -gt 0 ]; then
-    find "$dotfiles_dir" -type f | while IFS= read -r stored_file; do
-      rel_path="${stored_file#$dotfiles_dir/}"
-      target_file="$project_path/$rel_path"
-      
-      mkdir -p "$(dirname "$target_file")"
-      create_symlink "$stored_file" "$target_file" "$rel_path" "$project_dir"
-      echo "    🔗 Linked: $rel_path"
-    done
+  # Apply all files from the repository as symlinks
+  local dotfiles_applied=0
+  find "$project_dir" -type f -not -path "*/.git/*" -not -name ".gitignore" | while IFS= read -r stored_file; do
+    # Calculate relative path from project_dir
+    rel_path="${stored_file#$project_dir/}"
+    
+    # Skip dotfiles directory prefix if it exists
+    if [[ "$rel_path" == dotfiles/* ]]; then
+      rel_path="${rel_path#dotfiles/}"
+    fi
+    
+    target_file="$project_path/$rel_path"
+    
+    mkdir -p "$(dirname "$target_file")"
+    create_symlink "$stored_file" "$target_file" "$rel_path" "$project_dir"
+    echo "    🔗 Linked: $rel_path"
+    dotfiles_applied=$((dotfiles_applied + 1))
+  done
+
+  if [ $dotfiles_applied -eq 0 ]; then
+    echo "  ⚠️  No files found to link from the repository"
   fi
 
   echo ""
   echo "🎉 Remote setup complete!"
   echo ""
   echo "💡 Project details:"
+  echo "   Name:    $PROJECT"
   echo "   Storage: $project_dir"
   echo "   Target:  $project_path"
   echo "   Remote:  $git_repo"
   echo ""
   echo "📋 Available commands:"
-  echo "   dotproj status $PROJECT    - Show tracked files"
+  echo "   dotproj status $PROJECT    - Show linked files"
   echo "   dotproj add $PROJECT       - Add more files"
   echo "   dotproj sync $PROJECT      - Sync changes with remote"
 }
