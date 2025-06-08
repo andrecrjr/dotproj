@@ -41,7 +41,7 @@ echo ""
 
 # Download the dotproj script
 echo "📥 Downloading dotproj script..."
-if ! curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/feature/git-full-integration/dotproj -o dotproj; then
+if ! curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/dotproj -o dotproj; then
     echo "❌ Failed to download dotproj script"
     exit 1
 fi
