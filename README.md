@@ -4,6 +4,8 @@
 
 ## 📋 What It Solves
 
+**Quick Install**: `curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/install.sh | bash`
+
 Eliminates the hassle of manually copying configuration files like:
 - **Environment files**: `.env`, `.env.local`, `.env.development`
 - **Editor configurations**: `.vscode/settings.json`, `.cursorrules`, `.cursor/`
@@ -15,9 +17,23 @@ Eliminates the hassle of manually copying configuration files like:
 - **Symlinks** files for real-time synchronization
 - **Smart backups** - one backup per file, no clutter
 - **Git versioning** for team collaboration
-- **Cross-machine sync** via remote repositories
+- **Cross-machine sync** via remote repositories (create a private repo)
 
-**Install**: `curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/install.sh | bash`
+
+## 🔒 Security & Privacy
+
+**⚠️ CRITICAL: Use PRIVATE repositories for sensitive files!**
+
+- **Environment files**: `.env`, `.env.local`, `.env.production` → **PRIVATE REPO ONLY**
+- **API keys & secrets**: Any file with passwords, tokens, keys → **PRIVATE REPO ONLY**
+- **Team configs**: Shared sensitive settings → **PRIVATE TEAM REPO**
+- **Public configs**: Non-sensitive files like `.vscode/settings.json` → Can use public repos
+
+**Repository Security Checklist**:
+- ✅ Create private repository before `dotproj init`
+- ✅ Verify repository visibility is "Private" 
+- ✅ Only invite trusted team members
+- ✅ Never commit actual secrets to public repos
 
 ## 🚀 Essential Workflows
 
@@ -31,15 +47,22 @@ git config --global user.email "your.email@example.com"
 
 **Create new project**:
 ```bash
+# 0. 🔒 IMPORTANT: Create a PRIVATE repository first!
+#    For projects with sensitive files (.env, API keys, secrets):
+#    → GitHub: Create private repo (avoid adding README)
+#    → GitLab: Create private repo 
+#    → Example: https://github.com/username/my-project-config.git
+
 # 1. Initialize project (prompts for files, creates symlinks automatically)
 dotproj init my-project
 
-# 2. Select files when prompted: .env.local, .vscode, .cursorrules, etc.
+# 2. Select files when prompted: .env.local, .vscode, .cursor, etc.
 #    → Files are copied to storage and symlinked back to project
+#    ⚠️  SECURITY: Only use PRIVATE repos for .env files with secrets!
 
 # 3. Work normally - changes auto-saved via symlinks
 
-# 4. Sync changes to Git (when ready)
+# 4. Sync changes to Git (when ready, never forget)
 dotproj sync my-project
 ```
 
@@ -54,13 +77,18 @@ dotproj sync my-project       # Commit changes
 
 **Team member 1 - Create and share**:
 ```bash
-# 1. Create project with Git repo
+# 1. 🔒 Create PRIVATE repository first (for sensitive team configs)
+#    → GitHub/GitLab: Create private repo for team
+#    → Example: https://github.com/team/project-config.git
+
+# 2. Initialize project with Git repo
 dotproj init team-project
-# → Enter Git repo URL when prompted: https://github.com/team/project-config.git
+# → Enter PRIVATE Git repo URL when prompted
 
-# 2. Select team files: .env.example, .vscode, .cursorrules, etc.
+# 3. Select team files: .env.example, .vscode, .cursor, etc.
+#    ⚠️  SECURITY: Ensure repo is PRIVATE for sensitive files!
 
-# 3. Share with team
+# 4. Share with team
 dotproj sync team-project     # Pushes to remote repo
 ```
 
@@ -69,8 +97,10 @@ dotproj sync team-project     # Pushes to remote repo
 # 1. Go to your project directory
 cd /path/to/your-project
 
-# 2. Load team's configurations (automatically applies to current project)
-dotproj remote team-project https://github.com/team/project-config.git
+# 2. Load team's configurations (clones repo + auto-applies symlinks)
+dotproj remote team-project
+# → Enter repo URL when prompted: https://github.com/team/project-config.git
+# → Automatically creates symlinks in current project directory
 
 # 3. Work and sync changes
 # Edit files normally...
@@ -82,7 +112,7 @@ dotproj sync team-project     # Commits and pushes your changes
 ```bash
 # Essential Commands
 dotproj init <project>           # Create new project (includes file selection + symlinks)
-dotproj remote <project> <url>   # Load from team repository + auto-apply to current dir
+dotproj remote <project>         # Clone remote repo + auto-apply symlinks to current dir
 dotproj add <project>            # Add more files + create symlinks
 dotproj apply <project>          # Create symlinks from stored files (manual re-apply)
 dotproj sync <project>           # Commit and push/pull changes
@@ -103,7 +133,7 @@ dotproj setup                    # Install dotproj
 **React/Next.js**:
 ```bash
 dotproj init my-nextjs-app
-# Track: .env.local, .vscode, .eslintrc.json, .prettierrc, .cursorrules
+# Track: .env.local, .vscode, .cursorrules
 ```
 
 **Full-Stack**:
@@ -123,14 +153,16 @@ dotproj init ai-project
 **Symlinks connect project files to centralized storage**:
 ```
 Project Directory                Storage Directory
-├── .env → ~/dotfiles/.../env    ├── .env (actual file)
-├── .vscode/ → ~/dotfiles/...    ├── .vscode/ (actual files)
+├── .env → ~/.dotproj/.../env    ├── .env (actual file)
+├── .vscode/ → ~/.dotproj/...    ├── .vscode/ (actual files)
+├── .cursor/ → ~/.dotproj/...    ├── .cursor/ (actual files)
 ```
 
 **Benefits**:
 - Edit files in project → changes immediately saved to storage
 - Delete project files → only removes symlinks, data stays safe
 - `dotproj apply` recreates missing symlinks instantly
+
 
 ## 🛡️ Safety & Backup System
 
@@ -145,13 +177,13 @@ Project Directory                Storage Directory
 ```
 ~/.dotproj/
 ├── config                      # Project configuration
-└── dotproj                     # Installed script
-
-~/dotfiles/projects/
-├── my-project/
-│   ├── .git/                   # Git repository
-│   ├── dotfiles/               # Tracked files
-│   └── backups/                # Single backup per file
+├── dotproj                     # Installed script
+└── projects/                   # Project storage
+    ├── my-project/
+    │   ├── .git/               # Git repository
+    │   ├── dotfiles/           # Tracked files (if using dotfiles/ structure)
+    │   ├── backups/            # Single backup per file
+    │   └── [config files]      # Direct config files (for remote repos)
 ```
 
 ## 🔍 Troubleshooting
