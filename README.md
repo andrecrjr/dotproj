@@ -1,14 +1,28 @@
 # 🎯 DotProj - Project-Specific Configuration Manager
 
-**DotProj** is a developer-focused CLI tool that manages project-specific configuration files with Git versioning. Keep your development environment settings organized, versioned, and synchronized across machines and projects.
+**DotProj** is a developer-centric CLI tool designed to manage project-specific configuration files with Git versioning. It helps keep your development environment settings organized, versioned, and synchronized across multiple machines and projects.
+
+
+## Prerequisites:
+* **Git** must be installed and configured:
+    ```bash
+    git config --global user.name "Your Name"
+    git config --global user.email "your.email@example.com"
+    ```
+* **Curl** must be installed.
+
+--- 
+
+**Quick Install for Linux and macOS**:
+```bash
+curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/install.sh | bash
+```
 
 ## 📋 What It Solves
 
-**Quick Install**: `curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/install.sh | bash`
-
 Eliminates the hassle of manually copying configuration files like:
 - **Environment files**: `.env`, `.env.local`, `.env.development`
-- **Editor configurations**: `.vscode/settings.json`, `.cursorrules`, `.cursor/`
+- **Editor configurations**: `.vscode`, `.cursor`
 - **Linting & formatting**: `.eslintrc.json`, `.prettierrc`, `.editorconfig`
 - **Build & deployment**: `docker-compose.override.yml`, `Dockerfile.dev`
 
@@ -27,7 +41,6 @@ Eliminates the hassle of manually copying configuration files like:
 - **Environment files**: `.env`, `.env.local`, `.env.production` → **PRIVATE REPO ONLY**
 - **API keys & secrets**: Any file with passwords, tokens, keys → **PRIVATE REPO ONLY**
 - **Team configs**: Shared sensitive settings → **PRIVATE TEAM REPO**
-- **Public configs**: Non-sensitive files like `.vscode/settings.json` → Can use public repos
 
 **Repository Security Checklist**:
 - ✅ Create private repository before `dotproj init`
@@ -36,12 +49,6 @@ Eliminates the hassle of manually copying configuration files like:
 - ✅ Never commit actual secrets to public repos
 
 ## 🚀 Essential Workflows
-
-**Prerequisites**: Git must be installed and configured
-```bash
-git config --global user.name "Your Name"
-git config --global user.email "your.email@example.com"
-```
 
 ### 🔧 Basic Individual Flow
 
