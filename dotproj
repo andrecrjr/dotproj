@@ -3,7 +3,7 @@
 # DotProj CLI - Manages project-specific dotfiles with Git versioning
 
 CONFIG_FILE="$HOME/.dotproj/config"
-DOTFILES_ROOT="$HOME/dotfiles/projects"
+DOTFILES_ROOT="$HOME/.dotproj/projects"
 CMD="$1"
 PROJECT="$2"
 
@@ -70,7 +70,7 @@ prompt_dotfiles_selection() {
   echo ""
   echo "Examples:"
   echo "  .env.local, .vscode, .cursor, monorepo/front-end/.cursor, monorepo/back-end/.env"
-  echo "  .eslintrc.json, .prettierrc, .gitignore"
+  echo "  .gitignore, .cursor, .cursor/rules/, .vscode/mcp.json, .vscode/settings.json, .vscode/extensions.json"
   echo ""
   echo "💡 Tips:"
   echo "  - Use relative paths from your project root"
@@ -464,6 +464,38 @@ remote() {
 
   echo "✅ Repository cloned successfully!"
 
+  # Switch to project-specific branch
+  cd "$project_dir" || exit 1
+  local branch_name="dotproj-$PROJECT"
+  
+  echo "🔀 Setting up project branch: $branch_name"
+  
+  # Check if the project-specific branch exists on remote
+  if git show-ref --verify --quiet "refs/remotes/origin/$branch_name"; then
+    echo "  📥 Checking out existing remote branch: $branch_name"
+    git checkout -q "$branch_name"
+  elif git show-ref --verify --quiet "refs/heads/$branch_name"; then
+    echo "  🔄 Switching to existing local branch: $branch_name"
+    git checkout -q "$branch_name"
+  else
+    # Get the default branch (could be main, master, etc.)
+    local default_branch
+    default_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo "")
+    
+    if [ -z "$default_branch" ]; then
+      # Fallback: try to determine default branch from available branches
+      default_branch=$(git branch -r | grep -E 'origin/(main|master)' | head -1 | sed 's@.*origin/@@' | tr -d ' ' || echo "")
+    fi
+    
+    if [ -z "$default_branch" ]; then
+      # Final fallback: use current branch
+      default_branch=$(git branch --show-current 2>/dev/null || echo "main")
+    fi
+    
+    echo "  🆕 Creating new project branch: $branch_name (from $default_branch)"
+    git checkout -q -b "$branch_name" "$default_branch" 2>/dev/null || git checkout -q -b "$branch_name"
+  fi
+
   # Write configuration
   write_config "$PROJECT" "dotfiles" "$project_dir"
   write_config "$PROJECT" "path" "$project_path"
@@ -471,18 +503,6 @@ remote() {
 
   # Ensure .gitignore excludes backups
   ensure_gitignore "$project_dir"
-
-  # Switch to project branch if it exists
-  cd "$project_dir" || exit 1
-  local branch_name="dotproj-$PROJECT"
-  
-  if git show-ref --verify --quiet "refs/remotes/origin/$branch_name"; then
-    echo "🔀 Switching to project branch: $branch_name"
-    git checkout -q "$branch_name"
-  elif git show-ref --verify --quiet "refs/heads/$branch_name"; then
-    echo "🔀 Switching to existing local branch: $branch_name"
-    git checkout -q "$branch_name"
-  fi
 
   echo ""
   echo "🔗 Applying dotfiles to current project..."
@@ -522,6 +542,7 @@ remote() {
   echo "📋 Available commands:"
   echo "   dotproj status $PROJECT    - Show linked files"
   echo "   dotproj add $PROJECT       - Add more files"
+  echo "   dotproj apply $PROJECT     - Apply any files as symlinks to the current environment"
   echo "   dotproj sync $PROJECT      - Sync changes with remote"
 }
 
@@ -663,11 +684,11 @@ apply() {
       echo "    🔗 Linked: $rel_path -> $stored_file"
     done
   else
-    echo "  ℹ️  No dotfiles are currently tracked for this project"
-    echo "    Use 'dotproj add $PROJECT' to track some dotfiles first"
+    echo "  ℹ️  No files/dotfiles are currently tracked for this project"
+    echo "    Use 'dotproj add $PROJECT' to track some files/dotfiles first"
   fi
   
-  echo "✅ Applied dotfiles for '$PROJECT'"
+  echo "✅ Applied files/dotfiles for '$PROJECT'"
 }
 
 save() {
@@ -687,11 +708,11 @@ save() {
     exit 1
   fi
 
-  echo "💾 Checking dotfiles for '$PROJECT'..."
+  echo "💾 Checking files/dotfiles for '$PROJECT'..."
 
   if [ -d "$dotfiles_dir" ] && [ "$(find "$dotfiles_dir" -type f | wc -l)" -gt 0 ]; then
     echo "  ℹ️  With symlinks, changes are automatically saved to storage"
-    echo "  Verifying symlink integrity..."
+    echo "  Verifying files/dotfiles symlink integrity..."
     
     local broken_links=0
     find "$dotfiles_dir" -type f | while IFS= read -r stored_file; do
@@ -715,14 +736,14 @@ save() {
     done
     
     if [ $broken_links -gt 0 ]; then
-      echo "  💡 Run 'dotproj apply $PROJECT' to fix broken or missing links"
+      echo "  💡 Run 'dotproj apply $PROJECT' to fix broken or missing files/dotfiles"
     fi
   else
-    echo "  ℹ️  No dotfiles are currently tracked for this project"
-    echo "    Use 'dotproj add $PROJECT' to track some dotfiles"
+    echo "  ℹ️  No files/dotfiles are currently tracked for this project"
+    echo "    Use 'dotproj add $PROJECT' to track some files/dotfiles"
   fi
   
-  echo "✅ Dotfiles check completed for '$PROJECT'"
+  echo "✅ Files/dotfiles check completed for '$PROJECT'"
 }
 
 sync() {
@@ -738,7 +759,7 @@ sync() {
     exit 1
   fi
 
-  echo "🔄 Syncing dotfiles for '$PROJECT'..."
+  echo "🔄 Syncing files/dotfiles for '$PROJECT'..."
   cd "$project_dir" || exit 1
   
   current_branch=$(git branch --show-current 2>/dev/null || echo "")
@@ -754,7 +775,7 @@ sync() {
 
   echo "  Committing changes..."
   git add .
-  if git commit -q -m "Sync dotfiles for $PROJECT - $(date '+%Y-%m-%d %H:%M:%S')" 2>/dev/null; then
+  if git commit -q -m "Sync files/dotfiles for $PROJECT - $(date '+%Y-%m-%d %H:%M:%S')" 2>/dev/null; then
     echo "  ✅ Changes committed"
   else
     echo "  ℹ️  No changes to commit"
