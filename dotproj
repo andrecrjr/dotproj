@@ -3,11 +3,55 @@
 # DotProj CLI - Manages project-specific dotfiles with Git versioning
 
 CONFIG_FILE="$HOME/.dotproj/config"
-DOTFILES_ROOT="$HOME/dotfiles/projects"
+DOTFILES_ROOT="$HOME/.dotproj/projects"
 CMD="$1"
 PROJECT="$2"
 
 mkdir -p "$DOTFILES_ROOT"
+
+# Check if Git is available
+check_git() {
+  if ! command -v git >/dev/null 2>&1; then
+    echo "❌ Error: Git is required but not installed."
+    echo ""
+    echo "📦 Please install Git first:"
+    echo "  • Ubuntu/Debian: sudo apt update && sudo apt install git"
+    echo "  • CentOS/RHEL:   sudo yum install git"
+    echo "  • Fedora:        sudo dnf install git"
+    echo "  • macOS:         brew install git (or install Xcode Command Line Tools)"
+    echo "  • Arch Linux:    sudo pacman -S git"
+    echo ""
+    echo "DotProj requires Git for version control and synchronization."
+    exit 1
+  fi
+}
+
+# Check Git configuration and provide setup guidance
+check_git_config() {
+  local git_name
+  local git_email
+  
+  git_name=$(git config --global user.name 2>/dev/null || echo "")
+  git_email=$(git config --global user.email 2>/dev/null || echo "")
+  
+  if [ -z "$git_name" ] || [ -z "$git_email" ]; then
+    echo "⚠️  Git is not fully configured for commits."
+    echo ""
+    echo "🔧 Please configure Git with your name and email:"
+    echo "   git config --global user.name \"Your Name\""
+    echo "   git config --global user.email \"your.email@example.com\""
+    echo ""
+    echo "This is required for Git commits and synchronization."
+    echo ""
+    echo -n "Continue anyway? (y/N): "
+    read -r continue_choice
+    if [ "$continue_choice" != "y" ] && [ "$continue_choice" != "Y" ]; then
+      echo "Setup cancelled. Please configure Git and try again."
+      exit 1
+    fi
+    echo ""
+  fi
+}
 
 get_relative_path() {
   local file="$1"
@@ -22,16 +66,19 @@ prompt_dotfiles_selection() {
   echo ""
   echo "📁 Dotfiles Selection for '$project'"
   echo "════════════════════════════════════════════════════════════════"
-  echo "Enter the dotfiles/folders you want to track (comma-separated):"
+  echo "Enter the files/dotfiles/folders you want to track (comma-separated):"
+  echo ""
+  echo "🔒 SECURITY REMINDER: Ensure your Git repo is PRIVATE for sensitive files!"
   echo ""
   echo "Examples:"
-  echo "  .env.local, .vscode, .cursor"
-  echo "  .eslintrc.json, .prettierrc, .gitignore"
+  echo "  .env.local, monorepo/front-end/.cursor, monorepo/back-end/.env"
+  echo "  .cursor, .cursor/rules/, .vscode/mcp.json, .vscode/settings.json, .vscode/extensions.json"
   echo ""
   echo "💡 Tips:"
   echo "  - Use relative paths from your project root"
   echo "  - Folders will include all files within them"
   echo "  - You can add more dotfiles later with 'dotproj add <project>'"
+  echo "  - ⚠️  Files with secrets (.env) require PRIVATE repositories!"
   echo ""
   echo -n "Enter dotfiles to track (or press Enter to skip): "
   read -r dotfiles_input
@@ -102,18 +149,24 @@ create_symlink() {
         # Symlink pointing elsewhere, back it up
         local backup_dir="$project_dir/backups"
         mkdir -p "$backup_dir"
-        local backup_file="$backup_dir/${rel_path//\//_}.backup.$(date +%s)"
+        local backup_file="$backup_dir/${rel_path//\//_}.backup"
+        
+        # Remove existing backup if it exists, then create new one
+        [ -e "$backup_file" ] && rm -f "$backup_file"
         mv "$target_file" "$backup_file"
-        echo "    📦 Backed up existing symlink: $rel_path -> backups/${backup_file##*/}"
+        echo "    📦 Updated backup for symlink: $rel_path -> backups/${backup_file##*/}"
       fi
     else
       # Regular file, back it up
       local backup_dir="$project_dir/backups"
       mkdir -p "$backup_dir"
-      local backup_file="$backup_dir/${rel_path//\//_}.backup.$(date +%s)"
+      local backup_file="$backup_dir/${rel_path//\//_}.backup"
+      
+      # Remove existing backup if it exists, then create new one
+      [ -e "$backup_file" ] && rm -f "$backup_file"
       cp "$target_file" "$backup_file"
       rm "$target_file"
-      echo "    📦 Backed up existing file: $rel_path -> backups/${backup_file##*/}"
+      echo "    📦 Updated backup for file: $rel_path -> backups/${backup_file##*/}"
     fi
   fi
   
@@ -145,7 +198,7 @@ usage() {
   echo "Commands:"
   echo "  setup               Install DotProj and add to PATH"
   echo "  init <project>      Initialize dotfiles for a project"
-  echo "  remote <project>    Initialize from a remote dotproj repository"
+  echo "  remote <project>    Initialize from a remote repository and apply symlinks"
   echo "  add <project>       Add more dotfiles to an existing project"
   echo "  apply <project>     Apply dotfiles as symlinks to the current environment"
   echo "  save <project>      Check dotfile symlink integrity (changes auto-saved)"
@@ -153,8 +206,92 @@ usage() {
   echo "  remove <project>    Remove a project and all its dotfiles"
   echo "  list                List all projects"
   echo "  status <project>    Show tracked and excluded dotfiles for a project"
+  echo "  version             Show version and system information"
+  echo "  update              Check for and install DotProj updates"
   echo "Use 'dotproj <command> --help' for more details"
   exit 1
+}
+
+get_version() {
+  local script_dir
+  script_dir="$(dirname "$(readlink -f "$0")")"
+  
+  # Try to read from VERSION file in the same directory as the script
+  if [ -f "$script_dir/VERSION" ]; then
+    cat "$script_dir/VERSION"
+  elif [ -f "$HOME/.dotproj/VERSION" ]; then
+    cat "$HOME/.dotproj/VERSION"
+  else
+    # Fallback to hardcoded version
+    echo "1.0.0"
+  fi
+}
+
+check_for_updates() {
+  local current_version="$1"
+  local check_only="${2:-false}"
+  
+  if command -v curl >/dev/null 2>&1; then
+    echo ""
+    echo "🔍 Checking for updates..."
+    
+    # Try to get latest version from GitHub
+    local latest_version
+    latest_version=$(curl -s "https://raw.githubusercontent.com/andrecrjr/dotproj/master/VERSION" 2>/dev/null || echo "")
+    
+    if [ -n "$latest_version" ] && [ "$latest_version" != "$current_version" ]; then
+      echo "📦 Update available: $current_version → $latest_version"
+      echo ""
+      if [ "$check_only" = "false" ]; then
+        echo "💡 To update DotProj, run:"
+        echo "   bash <(curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/update.sh)"
+        echo ""
+        echo "   Or download the update script:"
+        echo "   curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/update.sh -o update.sh"
+        echo "   chmod +x update.sh && ./update.sh"
+      fi
+    elif [ -n "$latest_version" ]; then
+      if [ "$check_only" = "true" ]; then
+        echo "✅ DotProj is up to date (version $current_version)"
+      fi
+    else
+      if [ "$check_only" = "true" ]; then
+        echo "⚠️  Could not check for updates (network issue or repository unavailable)"
+      fi
+    fi
+  else
+    if [ "$check_only" = "true" ]; then
+      echo "⚠️  curl not available - cannot check for updates"
+    fi
+  fi
+}
+
+version() {
+  local current_version
+  current_version=$(get_version)
+  
+  echo "🎯 DotProj - Project-Specific Dotfiles Manager"
+  echo "Version: $current_version"
+  echo ""
+  echo "📋 System Information:"
+  echo "  OS: $(uname -s)"
+  echo "  Shell: $SHELL"
+  if command -v git >/dev/null 2>&1; then
+    echo "  Git: $(git --version)"
+    local git_name git_email
+    git_name=$(git config --global user.name 2>/dev/null || echo "Not configured")
+    git_email=$(git config --global user.email 2>/dev/null || echo "Not configured")
+    echo "  Git User: $git_name <$git_email>"
+  else
+    echo "  Git: ❌ Not installed"
+  fi
+  echo ""
+  echo "📁 DotProj Paths:"
+  echo "  Config: $CONFIG_FILE"
+  echo "  Storage: $DOTFILES_ROOT"
+  
+  # Check for updates
+  check_for_updates "$current_version" "false"
 }
 
 command_help() {
@@ -170,8 +307,8 @@ command_help() {
       echo "Prompts for project path and optional Git repo"
       ;;
     remote)
-      echo "dotproj remote <project>: Initialize from a remote dotproj repository"
-      echo "Clones the repository and sets up the project with all dotfiles"
+      echo "dotproj remote <project>: Initialize from a remote repository"
+      echo "Clones the repository to dotproj storage and applies symlinks to current directory"
       echo "Usage: dotproj remote <project> [git-repo-url]"
       echo "If no URL provided, will prompt for repository URL"
       ;;
@@ -201,6 +338,17 @@ command_help() {
     status)
       echo "dotproj status <project>: Shows tracked dotfiles for a project"
       echo "Displays which files are being managed"
+      ;;
+    version)
+      echo "dotproj version: Shows version and system information"
+      echo "Displays DotProj version, Git status, and configuration paths"
+      ;;
+    update)
+      echo "dotproj update: Check for and install DotProj updates"
+      echo "Downloads and runs the update script to install the latest version"
+      echo "Options:"
+      echo "  --check    Only check for updates without installing"
+      echo "  --force    Force update even if already up to date"
       ;;
     *)
       usage
@@ -237,6 +385,8 @@ write_config() {
 }
 
 setup() {
+  check_git
+  
   # Create dotproj directory
   mkdir -p "$HOME/.dotproj"
   
@@ -247,6 +397,20 @@ setup() {
     echo "Installing DotProj to ~/.dotproj/dotproj..."
     cp "$0" "$HOME/.dotproj/dotproj"
     chmod +x "$HOME/.dotproj/dotproj"
+  fi
+  
+  # Install VERSION file if it exists alongside the script
+  local script_dir
+  script_dir="$(dirname "$(readlink -f "$0")")"
+  if [ -f "$script_dir/VERSION" ] && [ ! -f "$HOME/.dotproj/VERSION" ]; then
+    echo "Installing version information..."
+    cp "$script_dir/VERSION" "$HOME/.dotproj/VERSION"
+  fi
+
+  # Install update.sh if it exists alongside the script
+  if [ -f "$script_dir/update.sh" ] && [ ! -f "$HOME/.dotproj/update.sh" ]; then
+    echo "Installing update script..."
+    cp "$script_dir/update.sh" "$HOME/.dotproj/update.sh"
   fi
 
   # Add to PATH if not already there
@@ -268,6 +432,8 @@ setup() {
 
 init() {
   check_project
+  check_git
+  check_git_config
   local project_dir="$DOTFILES_ROOT/$PROJECT"
 
   if [ -d "$project_dir" ]; then
@@ -288,10 +454,15 @@ init() {
   echo "═══════════════════════════════════════════════════════════════"
   echo "Enter Git repository URL to sync your dotfiles across machines:"
   echo ""
+  echo "🔒 SECURITY WARNING: Use PRIVATE repositories for sensitive files!"
+  echo "   • .env files with API keys/secrets → PRIVATE REPO REQUIRED"
+  echo "   • Team configurations with secrets → PRIVATE REPO REQUIRED"
+  echo "   • Public configs (.vscode settings) → Public repos OK"
+  echo ""
   echo "Examples:"
-  echo "  https://github.com/username/project-dotfiles.git"
-  echo "  git@gitlab.com:username/project-dotfiles.git"
-  echo "  https://bitbucket.org/username/project-dotfiles.git"
+  echo "  https://github.com/username/my-project-config.git (PRIVATE)"
+  echo "  git@gitlab.com:username/project-dotfiles.git (PRIVATE)"
+  echo "  https://bitbucket.org/username/project-config.git (PRIVATE)"
   echo ""
   echo -n "Git repo URL (press Enter to skip): "
   read -r git_repo
@@ -326,6 +497,8 @@ init() {
 
 remote() {
   check_project
+  check_git
+  check_git_config
   local project_dir="$DOTFILES_ROOT/$PROJECT"
   local git_repo="$3"
 
@@ -337,14 +510,19 @@ remote() {
   # Get Git repository URL if not provided
   if [ -z "$git_repo" ]; then
     echo ""
-    echo "🌐 Remote DotProj Repository"
+    echo "🌐 Remote Repository Setup"
     echo "═══════════════════════════════════════════════════════════════"
-    echo "Enter the Git repository URL containing the dotproj configuration:"
+    echo "Enter the Git repository URL containing the dotfiles:"
+    echo ""
+    echo "🔒 SECURITY WARNING: Ensure repository is PRIVATE for sensitive files!"
+    echo "   • .env files with API keys/secrets → PRIVATE REPO REQUIRED"
+    echo "   • Team configurations with secrets → PRIVATE REPO REQUIRED"
+    echo "   • Public configs (.vscode settings) → Public repos OK"
     echo ""
     echo "Examples:"
-    echo "  https://github.com/username/my-dotfiles.git"
-    echo "  git@github.com:username/my-dotfiles.git"
-    echo "  https://gitlab.com/username/project-config.git"
+    echo "  https://github.com/username/my-project-config.git (PRIVATE)"
+    echo "  git@github.com:username/project-dotfiles.git (PRIVATE)"
+    echo "  https://gitlab.com/username/project-config.git (PRIVATE)"
     echo ""
     echo -n "Git repo URL: "
     read -r git_repo
@@ -355,74 +533,62 @@ remote() {
     fi
   fi
 
+  # Use current directory as project path
+  local project_path="$PWD"
+
   echo ""
-  echo "🎯 Initializing '$PROJECT' from remote repository..."
+  echo "🎯 Setting up '$PROJECT' from remote repository..."
   echo "Repository: $git_repo"
+  echo "Project path: $project_path"
   echo "════════════════════════════════════════════════════════════════"
 
-  # Get project path
-  echo "Enter project path where dotfiles should be applied (default: $PWD):"
-  read -r project_path
-  project_path="${project_path:-$PWD}"
-  if [ ! -d "$project_path" ]; then
-    echo "Error: Directory $project_path does not exist"
-    exit 1
-  fi
-
-  echo "📥 Cloning remote repository..."
-  local temp_dir="/tmp/dotproj-remote-$$"
+  echo "📥 Cloning repository to dotproj storage..."
   
-  # Clone the repository
-  if ! git clone "$git_repo" "$temp_dir" 2>/dev/null; then
+  # Clone directly to the dotproj storage directory
+  if ! git clone "$git_repo" "$project_dir" 2>/dev/null; then
     echo "❌ Failed to clone repository: $git_repo"
+    echo ""
     echo "Please check:"
     echo "  - Repository URL is correct"
     echo "  - You have access to the repository"
     echo "  - Repository exists and is accessible"
+    echo "  - Your internet connection is working"
+    echo "  - Git is properly configured with credentials (if private repo)"
     exit 1
   fi
 
-  echo "🔍 Analyzing remote repository structure..."
-  
-  # Check if it's a valid dotproj repository
-  if [ ! -d "$temp_dir/dotfiles" ]; then
-    echo "❌ This doesn't appear to be a valid dotproj repository"
-    echo "Expected structure: repository/dotfiles/"
-    echo "Current structure:"
-    ls -la "$temp_dir"
-    rm -rf "$temp_dir"
-    exit 1
-  fi
+  echo "✅ Repository cloned successfully!"
 
-  echo "✅ Valid dotproj repository found!"
-  
-  # Create the project structure
-  echo "📁 Creating project structure..."
-  mkdir -p "$project_dir"
-  
-  # Copy the entire repository to the project directory
-  cp -r "$temp_dir/." "$project_dir/"
-  
-  # Ensure we're on the correct branch
+  # Switch to project-specific branch
   cd "$project_dir" || exit 1
-  
-  # Ensure .gitignore excludes backups
-  ensure_gitignore "$project_dir"
-  
   local branch_name="dotproj-$PROJECT"
   
-  # Check if the remote has a branch with our project name, otherwise use current branch
+  echo "🔀 Setting up project branch: $branch_name"
+  
+  # Check if the project-specific branch exists on remote
   if git show-ref --verify --quiet "refs/remotes/origin/$branch_name"; then
-    echo "🔀 Switching to project branch: $branch_name"
+    echo "  📥 Checking out existing remote branch: $branch_name"
     git checkout -q "$branch_name"
   elif git show-ref --verify --quiet "refs/heads/$branch_name"; then
-    echo "🔀 Switching to existing local branch: $branch_name"
+    echo "  🔄 Switching to existing local branch: $branch_name"
     git checkout -q "$branch_name"
   else
-    # Create a new branch from current branch
-    current_branch=$(git branch --show-current 2>/dev/null || echo "main")
-    echo "🆕 Creating new project branch: $branch_name (from $current_branch)"
-    git checkout -q -b "$branch_name"
+    # Get the default branch (could be main, master, etc.)
+    local default_branch
+    default_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo "")
+    
+    if [ -z "$default_branch" ]; then
+      # Fallback: try to determine default branch from available branches
+      default_branch=$(git branch -r | grep -E 'origin/(main|master)' | head -1 | sed 's@.*origin/@@' | tr -d ' ' || echo "")
+    fi
+    
+    if [ -z "$default_branch" ]; then
+      # Final fallback: use current branch
+      default_branch=$(git branch --show-current 2>/dev/null || echo "main")
+    fi
+    
+    echo "  🆕 Creating new project branch: $branch_name (from $default_branch)"
+    git checkout -q -b "$branch_name" "$default_branch" 2>/dev/null || git checkout -q -b "$branch_name"
   fi
 
   # Write configuration
@@ -430,36 +596,49 @@ remote() {
   write_config "$PROJECT" "path" "$project_path"
   write_config "$PROJECT" "git" "$git_repo"
 
-  echo "✅ Successfully initialized '$PROJECT' from remote repository"
-  echo ""
+  # Ensure .gitignore excludes backups
+  ensure_gitignore "$project_dir"
 
-  # Show what was loaded
-  echo "📋 Loaded dotfiles:"
-  if [ -d "$project_dir/dotfiles" ] && [ "$(find "$project_dir/dotfiles" -type f | wc -l)" -gt 0 ]; then
-    find "$project_dir/dotfiles" -type f | while IFS= read -r file; do
-      rel_path="${file#$project_dir/dotfiles/}"
-      echo "  ✅ $rel_path"
-    done
-  else
-    echo "  ⚠️  No dotfiles found in the repository"
+  echo ""
+  echo "🔗 Applying dotfiles to current project..."
+  
+  # Apply all files from the repository as symlinks
+  local dotfiles_applied=0
+  find "$project_dir" -type f -not -path "*/.git/*" -not -name ".gitignore" | while IFS= read -r stored_file; do
+    # Calculate relative path from project_dir
+    rel_path="${stored_file#$project_dir/}"
+    
+    # Skip dotfiles directory prefix if it exists
+    if [[ "$rel_path" == dotfiles/* ]]; then
+      rel_path="${rel_path#dotfiles/}"
+    fi
+    
+    target_file="$project_path/$rel_path"
+    
+    mkdir -p "$(dirname "$target_file")"
+    create_symlink "$stored_file" "$target_file" "$rel_path" "$project_dir"
+    echo "    🔗 Linked: $rel_path"
+    dotfiles_applied=$((dotfiles_applied + 1))
+  done
+
+  if [ $dotfiles_applied -eq 0 ]; then
+    echo "  ⚠️  No files found to link from the repository"
   fi
 
   echo ""
-  echo "🎉 Remote initialization complete!"
-  echo ""
-  echo "📋 Next steps:"
-  echo "  1. Review loaded dotfiles: dotproj status $PROJECT"
-  echo "  2. Apply to your project: dotproj apply $PROJECT"
-  echo "  3. Make changes and save: dotproj save $PROJECT"
-  echo "  4. Sync with remote: dotproj sync $PROJECT"
+  echo "🎉 Remote setup complete!"
   echo ""
   echo "💡 Project details:"
+  echo "   Name:    $PROJECT"
   echo "   Storage: $project_dir"
   echo "   Target:  $project_path"
   echo "   Remote:  $git_repo"
-
-  # Clean up
-  rm -rf "$temp_dir"
+  echo ""
+  echo "📋 Available commands:"
+  echo "   dotproj status $PROJECT    - Show linked files"
+  echo "   dotproj add $PROJECT       - Add more files"
+  echo "   dotproj apply $PROJECT     - Apply any files as symlinks to the current environment"
+  echo "   dotproj sync $PROJECT      - Sync changes with remote"
 }
 
 add() {
@@ -494,6 +673,24 @@ add() {
   
   prompt_dotfiles_selection "$project_path" "$PROJECT"
   
+  # Create symlinks for newly added files
+  local dotfiles_dir="$project_dir/dotfiles"
+  if [ -d "$dotfiles_dir" ] && [ "$(find "$dotfiles_dir" -type f | wc -l)" -gt 0 ]; then
+    echo ""
+    echo "🔗 Creating symlinks for newly added files..."
+    find "$dotfiles_dir" -type f | while IFS= read -r stored_file; do
+      rel_path="${stored_file#$dotfiles_dir/}"
+      target_file="$project_path/$rel_path"
+      
+      # Only create symlink if target doesn't exist or isn't already correctly linked
+      if [ ! -L "$target_file" ] || [ "$(readlink "$target_file" 2>/dev/null)" != "$stored_file" ]; then
+        mkdir -p "$(dirname "$target_file")"
+        create_symlink "$stored_file" "$target_file" "$rel_path" "$project_dir"
+        echo "    🔗 Linked: $rel_path"
+      fi
+    done
+  fi
+  
   cd "$project_dir" || exit 1
   
   # Ensure .gitignore excludes backups
@@ -509,7 +706,7 @@ add() {
   git commit -q -m "Add new dotfiles to $PROJECT" 2>/dev/null || echo "No new files to commit"
   
   echo ""
-  echo "✅ Successfully added dotfiles to '$PROJECT'"
+  echo "✅ Successfully added and linked dotfiles to '$PROJECT'"
 }
 
 remove() {
@@ -582,11 +779,11 @@ apply() {
       echo "    🔗 Linked: $rel_path -> $stored_file"
     done
   else
-    echo "  ℹ️  No dotfiles are currently tracked for this project"
-    echo "    Use 'dotproj add $PROJECT' to track some dotfiles first"
+    echo "  ℹ️  No files/dotfiles are currently tracked for this project"
+    echo "    Use 'dotproj add $PROJECT' to track some files/dotfiles first"
   fi
   
-  echo "✅ Applied dotfiles for '$PROJECT'"
+  echo "✅ Applied files/dotfiles for '$PROJECT'"
 }
 
 save() {
@@ -606,11 +803,11 @@ save() {
     exit 1
   fi
 
-  echo "💾 Checking dotfiles for '$PROJECT'..."
+  echo "💾 Checking files/dotfiles for '$PROJECT'..."
 
   if [ -d "$dotfiles_dir" ] && [ "$(find "$dotfiles_dir" -type f | wc -l)" -gt 0 ]; then
     echo "  ℹ️  With symlinks, changes are automatically saved to storage"
-    echo "  Verifying symlink integrity..."
+    echo "  Verifying files/dotfiles symlink integrity..."
     
     local broken_links=0
     find "$dotfiles_dir" -type f | while IFS= read -r stored_file; do
@@ -634,18 +831,19 @@ save() {
     done
     
     if [ $broken_links -gt 0 ]; then
-      echo "  💡 Run 'dotproj apply $PROJECT' to fix broken or missing links"
+      echo "  💡 Run 'dotproj apply $PROJECT' to fix broken or missing files/dotfiles"
     fi
   else
-    echo "  ℹ️  No dotfiles are currently tracked for this project"
-    echo "    Use 'dotproj add $PROJECT' to track some dotfiles"
+    echo "  ℹ️  No files/dotfiles are currently tracked for this project"
+    echo "    Use 'dotproj add $PROJECT' to track some files/dotfiles"
   fi
   
-  echo "✅ Dotfiles check completed for '$PROJECT'"
+  echo "✅ Files/dotfiles check completed for '$PROJECT'"
 }
 
 sync() {
   check_project
+  check_git
   local project_dir="$DOTFILES_ROOT/$PROJECT"
   local git_repo
   git_repo=$(get_project_config "$PROJECT" "git")
@@ -656,7 +854,7 @@ sync() {
     exit 1
   fi
 
-  echo "🔄 Syncing dotfiles for '$PROJECT'..."
+  echo "🔄 Syncing files/dotfiles for '$PROJECT'..."
   cd "$project_dir" || exit 1
   
   current_branch=$(git branch --show-current 2>/dev/null || echo "")
@@ -672,7 +870,7 @@ sync() {
 
   echo "  Committing changes..."
   git add .
-  if git commit -q -m "Sync dotfiles for $PROJECT - $(date '+%Y-%m-%d %H:%M:%S')" 2>/dev/null; then
+  if git commit -q -m "Sync files/dotfiles for $PROJECT - $(date '+%Y-%m-%d %H:%M:%S')" 2>/dev/null; then
     echo "  ✅ Changes committed"
   else
     echo "  ℹ️  No changes to commit"
@@ -769,9 +967,9 @@ status() {
 
   echo ""
   echo "💡 Available commands:"
-      echo "    dotproj add $PROJECT     - Add more dotfiles"
-    echo "    dotproj save $PROJECT    - Check symlink integrity (changes auto-saved)"
-    echo "    dotproj apply $PROJECT   - Apply dotfiles as symlinks to project"
+  echo "    dotproj add $PROJECT     - Add more dotfiles"
+  echo "    dotproj save $PROJECT    - Check symlink integrity (changes auto-saved)"
+  echo "    dotproj apply $PROJECT   - Apply dotfiles as symlinks to project"
   echo "    dotproj sync $PROJECT    - Sync with Git repository"
 }
 
@@ -784,6 +982,88 @@ list() {
   else
     echo "No projects found. Run 'dotproj init <project>' to create one."
   fi
+}
+
+update() {
+  local check_only=false
+  local force_update=false
+  
+  # Parse options
+  while [[ $# -gt 0 ]]; do
+    case $1 in
+      --check)
+        check_only=true
+        shift
+        ;;
+      --force)
+        force_update=true
+        shift
+        ;;
+      *)
+        echo "Unknown option: $1"
+        echo "Use 'dotproj update --help' for usage information"
+        exit 1
+        ;;
+    esac
+  done
+  
+  if [ "$check_only" = "true" ]; then
+    local current_version
+    current_version=$(get_version)
+    echo "🔍 Checking for DotProj updates..."
+    echo "Current version: $current_version"
+    check_for_updates "$current_version" "true"
+    return
+  fi
+  
+  echo "🔄 DotProj Update Manager"
+  echo "════════════════════════════════════════════════════════════════"
+  echo ""
+  
+  # Check if curl is available
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "❌ curl is required for updates but not installed."
+    echo ""
+    echo "📦 Please install curl first:"
+    echo "  • Ubuntu/Debian: sudo apt update && sudo apt install curl"
+    echo "  • CentOS/RHEL:   sudo yum install curl"
+    echo "  • Fedora:        sudo dnf install curl"
+    echo "  • macOS:         curl is usually pre-installed"
+    echo "  • Arch Linux:    sudo pacman -S curl"
+    echo ""
+    echo "After installing curl, run 'dotproj update' again."
+    exit 1
+  fi
+  
+  echo "📥 Downloading update script..."
+  local temp_script
+  temp_script=$(mktemp)
+  
+  if ! curl -fsSL "https://raw.githubusercontent.com/andrecrjr/dotproj/master/update.sh" -o "$temp_script"; then
+    echo "❌ Failed to download update script"
+    echo ""
+    echo "Please check:"
+    echo "  - Your internet connection"
+    echo "  - Repository availability"
+    echo "  - Try again later"
+    rm -f "$temp_script"
+    exit 1
+  fi
+  
+  chmod +x "$temp_script"
+  
+  echo "🚀 Running update script..."
+  echo ""
+  
+  # Run the update script with appropriate flags
+  if [ "$force_update" = "true" ]; then
+    "$temp_script" --force
+  else
+    "$temp_script"
+  fi
+  
+  # Clean up
+  rm -f "$temp_script"
 }
 
 case "$CMD" in
@@ -826,6 +1106,14 @@ case "$CMD" in
   status)
     [ "$2" = "--help" ] && command_help status
     status
+    ;;
+  version)
+    version
+    ;;
+  update)
+    [ "$2" = "--help" ] && command_help update
+    shift  # Remove 'update' from arguments
+    update "$@"
     ;;
   --help)
     usage
