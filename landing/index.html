@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DotProj - Manage Your Dotfiles and Configurations Across Projects</title>
+    <meta name="description"
+        content="DotProj is a CLI tool that helps you manage your dotfiles and configurations across projects. It is a simple and easy to use tool that allows you to manage your dotfiles and configurations across projects.">
+    <meta name="keywords"
+        content="dotproj, dotfiles, configurations, projects, management, git, terminal, bash, zsh, fish, shell, dotfile, dotconfig, dotenv, dotrc, dotprofile, dotbashrc, dotzshrc, dotfishrc, dotconfigrc, dotenvrc, dotproj, dotfiles, configurations, projects, management, git, terminal, bash, zsh, fish, shell, dotfile, dotconfig, dotenv, dotrc, dotprofile, dotbashrc, dotzshrc, dotfishrc, dotconfigrc, dotenvrc, dotprofile, dotbashrc, dotzshrc, dotfishrc, dotconfigrc, dotenvrc, cli">
+    <meta name="author" content="André Carlos Jr.">
+    <meta name="robots" content="index, follow">
+    <meta name="googlebot" content="index, follow">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="DotProj - Manage Your Dotfiles and Configurations Across Projects">
+    <meta name="twitter:description"
+        content="DotProj is a CLI tool that helps you manage your dotfiles and configurations across projects. It is a simple and easy to use tool that allows you to manage your dotfiles and configurations across projects.">
+    <meta name="twitter:image" content="favicon.ico">
+    <meta name="og:title" content="DotProj - Manage Your Dotfiles and Configurations Across Projects">
+    <meta name="og:description"
+        content="DotProj is a tool that helps you manage your dotfiles and configurations across projects. It is a simple and easy to use tool that allows you to manage your dotfiles and configurations across projects.">
+    <meta name="og:image" content="favicon.ico">
+    <meta name="og:url" content="https://dotproj.ac-jr.com">
+    <meta name="og:type" content="website">
+    <!-- Load Termynal -->
+    <script src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/316871/termynal.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0d0d0d;
+            --text-color: #00ff87;
+            --accent-color: #ffd700;
+            --prompt-color: #6ec6ff;
+            --terminal-bg: #1e1e1e;
+            --success-color: #51cf66;
+            --error-color: #ff6b6b;
+            --comment-color: #6b7280;
+            --warning-color: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            scroll-behavior: smooth;
+        }
+
+        header {
+            padding: 5rem 2rem;
+            text-align: center;
+            height: 100vh;
+            background: #111;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .install-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 20px var(--text-color);
+        }
+
+        header p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            opacity: 0.9;
+        }
+
+        .install-button {
+            background: var(--text-color);
+            color: var(--bg-color);
+            border: 1px solid var(--text-color);
+            padding: 1rem 1.5rem;
+            margin-top: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: left;
+            transition: 0.3s ease;
+            font-size: 0.9rem;
+            user-select: none;
+        }
+
+        .install-section .install-button {
+            margin-top: 0;
+            margin-left: 1rem;
+            font-size: 1rem;
+        }
+
+        .install-section .copy {
+            margin-left: 1rem;
+            text-align: center;
+            width: 10%;
+            font-size: 1.2rem;
+        }
+
+        .copy:active {
+            opacity: 0.5;
+            transform: translateY(4px);
+        }
+
+
+        .install-line {
+            width: 100%;
+            background: var(--terminal-bg);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            word-break: break-all;
+            display: inline-block;
+            color: var(--prompt-color);
+            box-shadow: 0 4px 12px rgba(0, 255, 135, 0.1);
+            border: 1px solid var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .install-line:hover {
+            box-shadow: 0 6px 20px rgba(0, 255, 135, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .install-line::before {
+            content: '$ ';
+            color: var(--prompt-color);
+            font-weight: bold;
+        }
+
+        .workspace-container {
+            display: flex;
+            flex-direction: row;
+            gap: 2rem;
+            width: 100%;
+            padding: 0 2rem;
+        }
+
+        .workflow-nav {
+            width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .workflow-nav button {
+            background: var(--terminal-bg);
+            color: var(--text-color);
+            border: 1px solid var(--text-color);
+            padding: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: left;
+            transition: 0.3s ease;
+            font-size: 0.9rem;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .workflow-nav button.active,
+        .workflow-nav button:hover {
+            background: var(--text-color);
+            color: var(--bg-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 255, 135, 0.2);
+        }
+
+        .workspace-terminal {
+            flex: 1;
+            width: auto;
+        }
+
+        /**
+         * Enhanced Termynal Styles
+         */
+        [data-termynal] {
+            width: 100%;
+            max-width: 100%;
+            background: var(--terminal-bg);
+            color: var(--text-color);
+            font-size: 16px;
+            font-family: 'Fira Code', 'JetBrains Mono', 'SF Mono', Consolas, 'Liberation Mono', Menlo, Monaco, 'Courier New', Courier, monospace;
+            border-radius: 12px;
+            padding: 75px 30px 30px;
+            position: relative;
+            box-sizing: border-box;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 255, 135, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        [data-termynal]:before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #d9515d;
+            box-shadow: 25px 0 0 #f4c025, 50px 0 0 #3ec930;
+        }
+
+        [data-termynal]:not([id="init"], [id="remote"], [id="management"], [id="sync"], [id="setup"])::after {
+            content: 'bash - ~/.dotproj';
+            position: absolute;
+            top: 10px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        /* Enhanced prompt styling */
+        [data-ty]:before {
+            content: '$ ';
+            margin-right: 0.5em;
+            color: var(--prompt-color);
+            font-weight: bold;
+        }
+
+        [data-ty="input"]:before {
+            content: '$ ';
+            margin-right: 0.5em;
+            color: var(--prompt-color);
+            font-weight: bold;
+        }
+
+        /* Success messages */
+        [data-ty].success {
+            color: var(--success-color);
+            font-weight: 500;
+        }
+
+        [data-ty].success:before {
+            content: '';
+            margin-right: 0;
+        }
+
+        /* Warning messages */
+        [data-ty].warning {
+            color: var(--warning-color);
+            font-weight: 500;
+        }
+
+        [data-ty].warning:before {
+            content: '';
+            margin-right: 0;
+        }
+
+        /* Comment/info messages */
+        [data-ty].comment {
+            color: var(--comment-color);
+            font-style: italic;
+        }
+
+        [data-ty].comment:before {
+            content: '';
+            margin-right: 0;
+        }
+
+        /* Error messages */
+        [data-ty].error {
+            color: var(--error-color);
+            font-weight: 500;
+        }
+
+        [data-ty].error:before {
+            content: '';
+            margin-right: 0;
+        }
+
+        /* Enhanced cursor animation */
+        [data-ty-cursor]:not([id="init"], [id="remote"], [id="management"], [id="sync"], [id="setup"])::after {
+            content: attr(data-ty-cursor);
+            font-family: monospace;
+            margin-left: 0.2em;
+            animation: blink 1s infinite;
+            background: var(--text-color);
+            color: var(--terminal-bg);
+            padding: 0 2px;
+        }
+
+        @keyframes blink {
+
+            0%,
+            50% {
+                opacity: 1;
+            }
+
+            51%,
+            100% {
+                opacity: 0.3;
+            }
+        }
+
+        /* Add some breathing room between lines */
+        [data-ty] {
+            line-height: 1.6;
+            margin-bottom: 0.5em;
+            /* Increased spacing to make line breaks more visible */
+            display: block;
+            /* Ensure each line is treated as a block element */
+        }
+
+        /* Special styling for file paths and commands */
+        .path {
+            color: var(--accent-color);
+            font-weight: 500;
+        }
+
+        .command {
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        .workspace {
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2rem;
+            color: var(--accent-color);
+            padding: 4rem 2rem;
+            min-height: 100vh;
+        }
+
+        .commands {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .workspace-description {
+            font-size: 1.2rem;
+            margin: 0 auto 2rem;
+            opacity: 0.9;
+        }
+
+        .features {
+            padding: 4rem 2rem;
+            background: #111;
+            text-align: center;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            color: var(--accent-color);
+        }
+
+        .feature-list {
+            max-width: 800px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .feature {
+            background: var(--terminal-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 255, 135, 0.05);
+            border: 1px solid rgba(0, 255, 135, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .feature:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 255, 135, 0.15);
+            border-color: rgba(0, 255, 135, 0.3);
+        }
+
+        footer {
+            padding: 2rem;
+            text-align: center;
+            background: #0a0a0a;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        a {
+            color: var(--prompt-color);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: var(--text-color);
+        }
+
+        @media (max-width: 768px) {
+            .workspace-container {
+                flex-direction: column;
+            }
+
+            .workflow-nav {
+                width: 100%;
+                flex-direction: row;
+                overflow-x: auto;
+                gap: 0.5rem;
+            }
+
+            .workflow-nav button {
+                white-space: nowrap;
+                font-size: 0.8rem;
+                padding: 0.75rem;
+            }
+
+            [data-termynal] {
+                font-size: 14px;
+                padding: 60px 20px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Hero Section -->
+    <header>
+        <h1>DotProj</h1>
+        <p>Organize your dotfiles per project with ease using a simple CLI tool.</p>
+        <section class="install-section">
+            <div class="install-line">
+                curl -fsSL
+                https://raw.githubusercontent.com/andrecrjr/dotproj/master/install.sh | bash
+            </div>
+            <button class="install-button copy" onclick="copyToClipboard()">🔗 Copy</button>
+
+        </section>
+        <nav class="install-section">
+            <a href="#workspace"><button class="install-button">🚀 Quick Start</button></a>
+            <a href="#features"><button class="install-button">💡 Features</button></a>
+            <a href="https://www.ac-jr.com?utm_source=dotproj" target="_blank" rel="noopener noreferrer"><button
+                    class="install-button">👋 Contact</button></a>
+        </nav>
+    </header>
+
+    <!-- Terminal Workspaces -->
+    <section class="workspace" id="workspace">
+        <h2>How to use DotProj?</h2>
+        <p class="workspace-description">$ Project commands are executed in the terminal, in your project's root
+            folder.
+        </p>
+        <div class="workspace-container">
+            <nav class="workflow-nav">
+                <button class="tab active" data-tab="setup">🚀 Quick Start</button>
+                <button class="tab" data-tab="init">🚀 Project Init</button>
+                <button class="tab" data-tab="sync">🔄 Git Sync</button>
+                <button class="tab" data-tab="management">⚙️ File Management</button>
+                <button class="tab" data-tab="remote">🌐 Remote Setup</button>
+            </nav>
+            <div class="workspace-terminal">
+                <!-- Project Initialization Workflow -->
+                <!-- Setup Workflow -->
+                <div id="setup" class="termynal" data-termynal data-ty-cursor="█">
+                    <span data-ty="input">curl -fsSL
+                        https://raw.githubusercontent.com/andrecrjr/dotproj/master/install.sh | bash</span>
+                    <span data-ty class="comment">🔧 Installing DotProj to ~/.dotproj/dotproj...</span>
+                    <span data-ty class="success">✅ Binary installed to ~/.dotproj/bin/dotproj</span>
+                    <span data-ty class="success">✅ Added to PATH: export PATH="$HOME/.dotproj/bin:$PATH"</span>
+                    <span data-ty="input">source ~/.bashrc</span>
+                    <span data-ty="input">dotproj version</span>
+                    <span data-ty class="success">DotProj - v1.0.0</span>
+                    <span data-ty class="success">✅ Setup complete! You're ready to start using DotProj.</span>
+                </div>
+                <!-- Project Initialization Workflow -->
+                <div id="init" class="termynal" style="display:none;" data-termynal data-ty-cursor="█">
+                    <span data-ty class="comment"># These are the commands to initialize a new configuration
+                        project. It will use the given git repository to create a new branch and add the
+                        files/dotfiles/folders to your private repository.</span>
+                    <span data-ty="input">dotproj init my-cool-app</span>
+                    <span data-ty class="comment">Enter project path (default:
+                        /home/user/projects/my-cool-app):</span>
+                    <span data-ty="input">/home/user/projects/my-cool-app (or press enter to use default project
+                        path)</span>
+                    <span data-ty class="comment">🔗 Git Repository (PRIVATE repository) (Optional)</span>
+                    <span data-ty class="comment">Enter Git repository URL:</span>
+                    <span data-ty="input">git@github.com:user/project-dotfiles.git</span>
+                    <span data-ty class="success">Creating project structure...</span>
+                    <span data-ty class="success">Initializing Git repo...</span>
+                    <span data-ty class="success">✅ Initialized project 'my-cool-app'</span>
+
+                    <span data-ty class="comment">📁 Dotfiles Selection for 'my-cool-app'</span>
+                    <span data-ty class="comment">Enter the files/dotfiles/folders you want to track
+                        (comma-separated):</span>
+                    <span data-ty="input">.env.local, .vscode/settings.json, .prettierrc, .eslintrc.js</span>
+                    <span data-ty class="success">✅ Added: .env.local</span>
+                    <span data-ty class="success">✅ Added: .vscode/settings.json</span>
+                    <span data-ty class="success">✅ Added: .prettierrc</span>
+                    <span data-ty class="success">✅ Added: .eslintrc.js</span>
+                    <span data-ty class="success">✅ Configuration saved and files tracked!</span>
+
+                    <span data-ty="input">dotproj apply my-cool-app</span>
+                    <span data-ty class="comment">📋 Applying dotfiles for 'my-cool-app'...</span>
+                    <span data-ty class="success">🔗 Linked: .env.local →
+                        ~/.dotproj/projects/my-cool-app/dotfiles/.env.local</span>
+                    <span data-ty class="success">🔗 Linked: .vscode/settings.json →
+                        ~/.dotproj/projects/my-cool-app/dotfiles/.vscode/settings.json</span>
+                    <span data-ty class="success">🔗 Linked: .prettierrc →
+                        ~/.dotproj/projects/my-cool-app/dotfiles/.prettierrc</span>
+                    <span data-ty class="success">🔗 Linked: .eslintrc.js →
+                        ~/.dotproj/projects/my-cool-app/dotfiles/.eslintrc.js</span>
+                    <span data-ty class="success">✅ Applied files/dotfiles for 'my-cool-app'</span>
+                </div>
+
+                <!-- Remote Setup Workflow -->
+                <div id="remote" class="termynal" style="display:none;" data-termynal data-ty-cursor="█">
+                    <span data-ty class="comment"># This is the command to restore dotfiles/files/folders from a
+                        remote repository to a project.</span>
+                    <span data-ty="input">dotproj remote team-project</span>
+                    <span data-ty class="comment">🌐 Remote Repository Setup</span>
+                    <span data-ty class="comment">Enter Git repository URL:</span>
+                    <span data-ty="input">git@github.com:team/project-dotfiles.git</span>
+                    <span data-ty class="success">📥 Cloning repository to dotproj storage...</span>
+                    <span data-ty class="success">✅ Repository cloned successfully!</span>
+                    <span data-ty class="success">🔗 Linked: .env →
+                        ~/.dotproj/projects/team-project/dotfiles/.env</span>
+                    <span data-ty class="success">🎉 Remote setup complete!</span>
+                </div>
+
+                <!-- File Management Workflow -->
+                <div id="management" class="termynal" style="display:none;" data-termynal data-ty-cursor="█">
+                    <span data-ty class="comment"># This is the command to add new files/dotfiles/folders to a
+                        project</span>
+                    <span data-ty="input">dotproj add my-cool-app</span>
+                    <span data-ty class="comment">Currently tracked dotfiles:</span>
+                    <span data-ty class="success">✅ .env.local</span>
+                    <span data-ty class="success">✅ .vscode/settings.json</span>
+                    <span data-ty class="comment">Enter dotfiles to track (comma-separated):</span>
+                    <span data-ty="input">.prettierrc, .gitignore</span>
+                    <span data-ty class="success">✅ Added: .prettierrc</span>
+                    <span data-ty class="success">✅ Added: .gitignore</span>
+
+                    <span data-ty="input">dotproj list</span>
+                    <span data-ty class="comment">Available projects:</span>
+                    <span data-ty class="success">- my-cool-app</span>
+                    <span data-ty class="success">- team-project</span>
+
+                    <span data-ty="input">dotproj status my-cool-app</span>
+                    <span data-ty class="comment">📊 Status for 'my-cool-app'</span>
+                    <span data-ty class="success">✅ Tracked: .env.local</span>
+                    <span data-ty class="success">✅ Tracked: .vscode/settings.json</span>
+                    <span data-ty class="success">✅ Tracked: .prettierrc</span>
+                    <span data-ty class="success">✅ Tracked: .eslintrc.js</span>
+                    <span data-ty class="success">✅ Tracked: .gitignore</span>
+
+                    <span data-ty="input">dotproj remove my-cool-app</span>
+                    <span data-ty class="comment">⚠️ Warning: This action cannot be undone!</span>
+                    <span data-ty class="comment">Type 'yes' to confirm:</span>
+                    <span data-ty="input">yes</span>
+                    <span data-ty class="success">✅ Project removed successfully</span>
+                </div>
+
+                <!-- Git Sync Workflow -->
+                <div id="sync" class="termynal" style="display:none;" data-termynal data-ty-cursor="█">
+                    <span data-ty class="comment"># This is the command to save the current state given a initialized
+                        project to the remote git repository.</span>
+                    <span data-ty="input">dotproj save my-cool-app</span>
+                    <span data-ty class="comment">💾 Checking symlink integrity...</span>
+                    <span data-ty class="success">✅ Linked: .env.local</span>
+                    <span data-ty class="success">✅ Files check completed</span>
+
+                    <span data-ty="input">dotproj sync my-cool-app</span>
+                    <span data-ty class="success">🔄 Syncing with remote repository...</span>
+                    <span data-ty class="success">✅ Changes committed and pushed</span>
+                    <span data-ty class="success">✅ Sync complete!</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Use Section -->
+    <section class="features" id="features">
+        <h2>Why use DotProj?</h2>
+        <div class="feature-list">
+            <div class="feature">
+                <h3>🚀 Quick Setup</h3>
+                <p>Automate configuration setup on new machines and environments with one command</p>
+            </div>
+            <div class="feature">
+                <h3>📁 Project Organization</h3>
+                <p>Keep dotfiles organized by project, no more configuration conflicts between different projects
+                </p>
+            </div>
+            <div class="feature">
+                <h3>🔗 Smart Symlinking</h3>
+                <p>Create symlinks without file duplication, maintaining single source of truth with automatic
+                    updates</p>
+            </div>
+            <div class="feature">
+                <h3>💾 Centralized Storage</h3>
+                <p>Store everything in ~/.dotproj with project-specific organization and backup management</p>
+            </div>
+            <div class="feature">
+                <h3>🔒 Version Control</h3>
+                <p>Git integration with project-specific branches for tracking changes and syncing across devices
+                </p>
+            </div>
+            <div class="feature">
+                <h3>⚙️ Flexible Config</h3>
+                <p>Highly customizable with support for remote repositories and team collaboration</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="footer">
+        &copy; 2025 AC-JR • Built with ❤️ for developers<br />
+        <a href="https://github.com/andrecrjr/dotproj" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+        •
+        <a href="https://github.com/andrecrjr/dotproj/blob/main/README.md" target="_blank"
+            rel="noopener noreferrer">Documentation</a> •
+        <a href="https://github.com/andrecrjr" target="_blank" rel="noopener noreferrer">GitHub</a> •
+        <a href="https://www.linkedin.com/in/andrecrjr/" target="_blank" rel="noopener noreferrer">LinkedIn</a> •
+        <a href="https://www.ac-jr.com" target="_blank" rel="noopener noreferrer">Portfolio</a>
+    </footer>
+
+    <!-- JS for Tabs -->
+    <script>
+        const tabs = document.querySelectorAll('.tab');
+        const terminals = {};
+        // Initialize Termynal with enhanced settings
+        function initTermynal(id) {
+            if (!terminals[id]) {
+                terminals[id] = new Termynal(`#${id}`, {
+                    typeDelay: 40,      // Faster typing
+                    lineDelay: 1000,    // Longer pause between lines
+                    cursor: '█',        // Block cursor
+                    startDelay: 500     // Initial delay
+                });
+            }
+        }
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Hide all terminals
+                document.querySelectorAll('.termynal').forEach(el => el.style.display = 'none');
+                // Show selected terminal
+                const termId = tab.getAttribute('data-tab');
+                document.getElementById(termId).style.display = 'block';
+                // Initialize Termynal if not already done
+                setTimeout(() => initTermynal(termId), 100);
+                // Update active state
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
+        // Init default tab
+        window.addEventListener('load', () => {
+            setTimeout(() => initTermynal('setup'), 500);
+        });
+    </script>
+
+    <script>
+        function copyToClipboard() {
+            const text = document.querySelector('.install-line').textContent;
+            navigator.clipboard.writeText(text);
+        }
+    </script>
+</body>
+
+</html>
