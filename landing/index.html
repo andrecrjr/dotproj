@@ -440,7 +440,8 @@
     <!-- Hero Section -->
     <header>
         <h1>DotProj</h1>
-        <p>Organize your dotfiles per project with ease using a simple CLI tool.</p>
+        <p>Git-like CLI for managing project configurations. Use familiar commit, push, pull commands to sync your
+            dotfiles across machines.</p>
         <section class="install-section">
             <div class="install-line">
                 curl -fsSL
@@ -459,133 +460,161 @@
 
     <!-- Terminal Workspaces -->
     <section class="workspace" id="workspace">
-        <h2>How to use DotProj?</h2>
-        <p class="workspace-description">$ Project commands are executed in the terminal, in your project's root
-            folder.
+        <h2>Git-like Workflow for Configuration Management</h2>
+        <p class="workspace-description">Use familiar Git commands (commit, push, pull, clone) to manage your project
+            configurations. Execute commands in your project's root folder.
         </p>
         <div class="workspace-container">
             <nav class="workflow-nav">
-                <button class="tab active" data-tab="setup">🚀 Quick Start</button>
-                <button class="tab" data-tab="init">🚀 Project Init</button>
-                <button class="tab" data-tab="sync">🔄 Git Sync</button>
-                <button class="tab" data-tab="management">⚙️ File Management</button>
-                <button class="tab" data-tab="remote">🌐 Remote Setup</button>
+                <button class="tab active" data-tab="setup">🚀 Setup & Install</button>
+                <button class="tab" data-tab="init">📝 Git-like Init</button>
+                <button class="tab" data-tab="remote">🌐 Clone & Branch Select</button>
+                <button class="tab" data-tab="management">⚙️ Add & Status</button>
+                <button class="tab" data-tab="sync">🔄 Pull & Push</button>
             </nav>
             <div class="workspace-terminal">
-                <!-- Project Initialization Workflow -->
                 <!-- Setup Workflow -->
                 <div id="setup" class="termynal" data-termynal data-ty-cursor="█">
                     <span data-ty="input">curl -fsSL
                         https://raw.githubusercontent.com/andrecrjr/dotproj/master/install.sh | bash</span>
                     <span data-ty class="comment">🔧 Installing DotProj to ~/.dotproj/dotproj...</span>
-                    <span data-ty class="success">✅ Binary installed to ~/.dotproj/bin/dotproj</span>
-                    <span data-ty class="success">✅ Added to PATH: export PATH="$HOME/.dotproj/bin:$PATH"</span>
+                    <span data-ty class="success">✅ Binary installed to ~/.dotproj/dotproj</span>
+                    <span data-ty class="success">✅ Added to PATH: export PATH="$HOME/.dotproj:$PATH"</span>
                     <span data-ty="input">source ~/.bashrc</span>
                     <span data-ty="input">dotproj version</span>
-                    <span data-ty class="success">DotProj - v1.0.0</span>
+                    <span data-ty class="success">🎯 DotProj - Project-Specific Configuration Manager</span>
+                    <span data-ty class="success">Version: 1.0.0</span>
                     <span data-ty class="success">✅ Setup complete! You're ready to start using DotProj.</span>
                 </div>
+
                 <!-- Project Initialization Workflow -->
                 <div id="init" class="termynal" style="display:none;" data-termynal data-ty-cursor="█">
-                    <span data-ty class="comment"># These are the commands to initialize a new configuration
-                        project. It will use the given git repository to create a new branch and add the
-                        files/dotfiles/folders to your private repository.</span>
-                    <span data-ty="input">dotproj init my-cool-app</span>
-                    <span data-ty class="comment">Enter project path (default:
-                        /home/user/projects/my-cool-app):</span>
-                    <span data-ty="input">/home/user/projects/my-cool-app (or press enter to use default project
-                        path)</span>
-                    <span data-ty class="comment">🔗 Git Repository (PRIVATE repository) (Optional)</span>
-                    <span data-ty class="comment">Enter Git repository URL:</span>
-                    <span data-ty="input">git@github.com:user/project-dotfiles.git</span>
+                    <span data-ty class="comment"># Git-like workflow: Initialize a new project with
+                        configurations</span>
+                    <span data-ty="input">dotproj init my-react-app</span>
+                    <span data-ty class="comment">Enter project path (default: /home/user/projects/my-react-app):</span>
+                    <span data-ty="input"></span>
+                    <span data-ty class="comment">🔗 Git Repository (Required)</span>
+                    <span data-ty class="comment">Enter Git repository URL to sync your dotfiles across machines:</span>
+                    <span data-ty="input">https://github.com/user/my-react-config.git</span>
                     <span data-ty class="success">Creating project structure...</span>
                     <span data-ty class="success">Initializing Git repo...</span>
-                    <span data-ty class="success">✅ Initialized project 'my-cool-app'</span>
+                    <span data-ty class="success">✅ Initialized project 'my-react-app'</span>
 
-                    <span data-ty class="comment">📁 Dotfiles Selection for 'my-cool-app'</span>
-                    <span data-ty class="comment">Enter the files/dotfiles/folders you want to track
-                        (comma-separated):</span>
-                    <span data-ty="input">.env.local, .vscode/settings.json, .prettierrc, .eslintrc.js</span>
+                    <span data-ty class="comment">📁 Files/Dotfiles Selection for 'my-react-app'</span>
+                    <span data-ty class="comment">Enter files/dotfiles to track (comma-separated):</span>
+                    <span data-ty="input">.env.local, .vscode/, .cursorrules, .prettierrc</span>
                     <span data-ty class="success">✅ Added: .env.local</span>
-                    <span data-ty class="success">✅ Added: .vscode/settings.json</span>
+                    <span data-ty class="success">✅ Added: .vscode/</span>
+                    <span data-ty class="success">✅ Added: .cursorrules</span>
                     <span data-ty class="success">✅ Added: .prettierrc</span>
-                    <span data-ty class="success">✅ Added: .eslintrc.js</span>
-                    <span data-ty class="success">✅ Configuration saved and files tracked!</span>
 
-                    <span data-ty="input">dotproj apply my-cool-app</span>
-                    <span data-ty class="comment">📋 Applying dotfiles for 'my-cool-app'...</span>
-                    <span data-ty class="success">🔗 Linked: .env.local →
-                        ~/.dotproj/projects/my-cool-app/dotfiles/.env.local</span>
-                    <span data-ty class="success">🔗 Linked: .vscode/settings.json →
-                        ~/.dotproj/projects/my-cool-app/dotfiles/.vscode/settings.json</span>
-                    <span data-ty class="success">🔗 Linked: .prettierrc →
-                        ~/.dotproj/projects/my-cool-app/dotfiles/.prettierrc</span>
-                    <span data-ty class="success">🔗 Linked: .eslintrc.js →
-                        ~/.dotproj/projects/my-cool-app/dotfiles/.eslintrc.js</span>
-                    <span data-ty class="success">✅ Applied files/dotfiles for 'my-cool-app'</span>
+                    <span data-ty class="comment"># Apply configurations as symlinks (like 'git commit')</span>
+                    <span data-ty="input">dotproj commit my-config-app</span>
+                    <span data-ty class="comment">📋 Committing files/dotfiles for 'my-config-app'...</span>
+                    <span data-ty class="success">🔗 Committed: .env.local</span>
+                    <span data-ty class="success">🔗 Committed: .vscode/settings.json</span>
+                    <span data-ty class="success">🔗 Committed: .cursorrules</span>
+                    <span data-ty class="success">🔗 Committed: .prettierrc</span>
+                    <span data-ty class="success">✅ Committed files/dotfiles for 'my-config-app'</span>
+
+                    <span data-ty class="comment"># Push to remote (like 'git push')</span>
+                    <span data-ty="input">dotproj push my-config-app</span>
+                    <span data-ty class="success">🚀 Pushing files/dotfiles for 'my-config-app'...</span>
+                    <span data-ty class="success">✅ Successfully pushed to remote</span>
                 </div>
 
-                <!-- Remote Setup Workflow -->
+                <!-- Remote Setup Workflow with Branch Selection -->
                 <div id="remote" class="termynal" style="display:none;" data-termynal data-ty-cursor="█">
-                    <span data-ty class="comment"># This is the command to restore dotfiles/files/folders from a
-                        remote repository to a project.</span>
-                    <span data-ty="input">dotproj remote team-project</span>
+                    <span data-ty class="comment"># Clone configurations from remote repository (like 'git
+                        clone')</span>
+                    <span data-ty="input">dotproj clone team-project</span>
                     <span data-ty class="comment">🌐 Remote Repository Setup</span>
                     <span data-ty class="comment">Enter Git repository URL:</span>
-                    <span data-ty="input">git@github.com:team/project-dotfiles.git</span>
+                    <span data-ty="input">https://github.com/team/project-configs.git</span>
                     <span data-ty class="success">📥 Cloning repository to dotproj storage...</span>
                     <span data-ty class="success">✅ Repository cloned successfully!</span>
-                    <span data-ty class="success">🔗 Linked: .env →
-                        ~/.dotproj/projects/team-project/dotfiles/.env</span>
-                    <span data-ty class="success">🎉 Remote setup complete!</span>
+
+                    <span data-ty class="comment">📋 Available branches in repository:</span>
+                    <span data-ty
+                        class="comment">════════════════════════════════════════════════════════════════</span>
+                    <span data-ty class="success"> 1) dotproj-frontend ⭐ (DotProj branch)</span>
+                    <span data-ty class="success"> 2) dotproj-backend ⭐ (DotProj branch)</span>
+                    <span data-ty class="success"> 3) dotproj-fullstack ⭐ (DotProj branch)</span>
+                    <span data-ty class="success"> 4) main</span>
+
+                    <span data-ty class="comment">💡 Choose a branch to restore configuration from:</span>
+                    <span data-ty class="comment">Select branch number (required):</span>
+                    <span data-ty="input">1</span>
+                    <span data-ty class="success">✅ Selected branch: dotproj-frontend</span>
+
+                    <span data-ty class="comment">Apply files from 'dotproj-frontend' to current project now?
+                        (y/N):</span>
+                    <span data-ty="input">y</span>
+                    <span data-ty class="success">🔗 Committed: .vscode/settings.json</span>
+                    <span data-ty class="success">🔗 Committed: .env.local</span>
+                    <span data-ty class="success">🔗 Committed: .cursorrules</span>
+                    <span data-ty class="success">🎉 Clone and commit complete!</span>
                 </div>
 
                 <!-- File Management Workflow -->
                 <div id="management" class="termynal" style="display:none;" data-termynal data-ty-cursor="█">
-                    <span data-ty class="comment"># This is the command to add new files/dotfiles/folders to a
-                        project</span>
-                    <span data-ty="input">dotproj add my-cool-app</span>
-                    <span data-ty class="comment">Currently tracked dotfiles:</span>
+                    <span data-ty class="comment"># Add more files to existing project (like 'git add')</span>
+                    <span data-ty="input">dotproj add my-config-app</span>
+                    <span data-ty class="comment">Currently tracked files/dotfiles:</span>
                     <span data-ty class="success">✅ .env.local</span>
                     <span data-ty class="success">✅ .vscode/settings.json</span>
-                    <span data-ty class="comment">Enter dotfiles to track (comma-separated):</span>
-                    <span data-ty="input">.prettierrc, .gitignore</span>
-                    <span data-ty class="success">✅ Added: .prettierrc</span>
+                    <span data-ty class="comment">Enter files/dotfiles to track (comma-separated):</span>
+                    <span data-ty="input">.eslintrc.js, .gitignore, docker-compose.override.yml</span>
+                    <span data-ty class="success">✅ Added: .eslintrc.js</span>
                     <span data-ty class="success">✅ Added: .gitignore</span>
+                    <span data-ty class="success">✅ Added: docker-compose.override.yml</span>
 
+                    <span data-ty class="comment"># Check project status (like 'git status')</span>
+                    <span data-ty="input">dotproj status my-config-app</span>
+                    <span data-ty class="comment">📊 Status for project 'my-config-app'</span>
+                    <span data-ty class="comment">Project path: /home/user/projects/my-react-app</span>
+                    <span data-ty class="comment">Git repo: https://github.com/user/my-react-config.git</span>
+                    <span data-ty class="comment">Git branch: dotproj-my-react-app</span>
+                    <span data-ty class="success">✅ .env.local</span>
+                    <span data-ty class="success">✅ .vscode/settings.json</span>
+                    <span data-ty class="success">✅ .eslintrc.js</span>
+                    <span data-ty class="success">✅ .gitignore</span>
+
+                    <span data-ty class="comment"># List all projects</span>
                     <span data-ty="input">dotproj list</span>
                     <span data-ty class="comment">Available projects:</span>
-                    <span data-ty class="success">- my-cool-app</span>
+                    <span data-ty class="success">- my-react-app</span>
                     <span data-ty class="success">- team-project</span>
-
-                    <span data-ty="input">dotproj status my-cool-app</span>
-                    <span data-ty class="comment">📊 Status for 'my-cool-app'</span>
-                    <span data-ty class="success">✅ Tracked: .env.local</span>
-                    <span data-ty class="success">✅ Tracked: .vscode/settings.json</span>
-                    <span data-ty class="success">✅ Tracked: .prettierrc</span>
-                    <span data-ty class="success">✅ Tracked: .eslintrc.js</span>
-                    <span data-ty class="success">✅ Tracked: .gitignore</span>
-
-                    <span data-ty="input">dotproj remove my-cool-app</span>
-                    <span data-ty class="comment">⚠️ Warning: This action cannot be undone!</span>
-                    <span data-ty class="comment">Type 'yes' to confirm:</span>
-                    <span data-ty="input">yes</span>
-                    <span data-ty class="success">✅ Project removed successfully</span>
                 </div>
 
                 <!-- Git Sync Workflow -->
                 <div id="sync" class="termynal" style="display:none;" data-termynal data-ty-cursor="█">
-                    <span data-ty class="comment"># This is the command to save the current state given a initialized
-                        project to the remote git repository.</span>
-                    <span data-ty="input">dotproj save my-cool-app</span>
-                    <span data-ty class="comment">💾 Checking symlink integrity...</span>
-                    <span data-ty class="success">✅ Linked: .env.local</span>
-                    <span data-ty class="success">✅ Files check completed</span>
+                    <span data-ty class="comment"># Pull latest changes from remote (like 'git pull')</span>
+                    <span data-ty="input">dotproj pull my-config-app</span>
+                    <span data-ty class="comment">📥 Pulling files/dotfiles for 'my-config-app'...</span>
 
-                    <span data-ty="input">dotproj sync my-cool-app</span>
-                    <span data-ty class="success">🔄 Syncing with remote repository...</span>
-                    <span data-ty class="success">✅ Changes committed and pushed</span>
-                    <span data-ty class="success">✅ Sync complete!</span>
+                    <span data-ty class="comment">📋 Available remote branches:</span>
+                    <span data-ty class="success"> 1) dotproj-frontend ⭐ (DotProj branch)</span>
+                    <span data-ty class="success"> 2) dotproj-backend ⭐ (DotProj branch)</span>
+                    <span data-ty class="success"> 3) main</span>
+                    <span data-ty class="comment">Select branch number (or press Enter for current):</span>
+                    <span data-ty="input">2</span>
+                    <span data-ty class="success">✅ Selected branch: dotproj-backend</span>
+                    <span data-ty class="success">✅ Successfully pulled from remote</span>
+
+                    <span data-ty class="comment">💡 Changes pulled successfully. Apply them to your project?</span>
+                    <span data-ty class="comment">Run 'dotproj commit my-react-app' now? (y/N):</span>
+                    <span data-ty="input">y</span>
+                    <span data-ty class="success">🔗 Committed: .env</span>
+                    <span data-ty class="success">🔗 Committed: package.json</span>
+                    <span data-ty class="success">✅ Committed files/dotfiles for 'my-config-app'</span>
+
+                    <span data-ty class="comment"># Push your changes (like 'git push')</span>
+                    <span data-ty="input">dotproj push my-react-app</span>
+                    <span data-ty class="success">🚀 Pushing files/dotfiles for 'my-config-app'...</span>
+                    <span data-ty class="success">✅ Successfully pushed to remote</span>
+                    <span data-ty class="success">✅ Push completed for 'my-react-app'</span>
                 </div>
             </div>
         </div>
@@ -596,31 +625,29 @@
         <h2>Why use DotProj?</h2>
         <div class="feature-list">
             <div class="feature">
-                <h3>🚀 Quick Setup</h3>
-                <p>Automate configuration setup on new machines and environments with one command</p>
+                <h3>🔧 Git-like Commands</h3>
+                <p>Familiar workflow with commit, push, pull, clone commands - intuitive for any developer</p>
+            </div>
+            <div class="feature">
+                <h3>🌿 Smart Branch Selection</h3>
+                <p>Choose from multiple configuration branches (frontend, backend, fullstack) for different project
+                    setups</p>
+            </div>
+            <div class="feature">
+                <h3>🔗 Intelligent Symlinks</h3>
+                <p>Real-time sync between project files and centralized storage - edit anywhere, update everywhere</p>
             </div>
             <div class="feature">
                 <h3>📁 Project Organization</h3>
-                <p>Keep dotfiles organized by project, no more configuration conflicts between different projects
-                </p>
+                <p>Isolated configurations per project with automatic backup and conflict prevention</p>
             </div>
             <div class="feature">
-                <h3>🔗 Smart Symlinking</h3>
-                <p>Create symlinks without file duplication, maintaining single source of truth with automatic
-                    updates</p>
+                <h3>🚀 Team Collaboration</h3>
+                <p>Share configurations via private Git repos with branch-based role separation (dev/staging/prod)</p>
             </div>
             <div class="feature">
-                <h3>💾 Centralized Storage</h3>
-                <p>Store everything in ~/.dotproj with project-specific organization and backup management</p>
-            </div>
-            <div class="feature">
-                <h3>🔒 Version Control</h3>
-                <p>Git integration with project-specific branches for tracking changes and syncing across devices
-                </p>
-            </div>
-            <div class="feature">
-                <h3>⚙️ Flexible Config</h3>
-                <p>Highly customizable with support for remote repositories and team collaboration</p>
+                <h3>🔄 Cross-machine Sync</h3>
+                <p>One-command deployment of your entire development environment across multiple machines</p>
             </div>
         </div>
     </section>

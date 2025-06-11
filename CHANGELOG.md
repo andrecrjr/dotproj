@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2025-06-08
 
 ### Added
+- Git-like commands to update your remote repository
 - Update system with `update.sh` script
 - Version management with `VERSION` file
 - Automatic backup creation during updates
@@ -22,7 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Git integration for version control
 - Symlink-based file management
 - Remote repository support
-- Commands: `init`, `remote`, `add`, `apply`, `save`, `sync`, `remove`, `list`, `status`, `version`, `setup`
 - Cross-platform support (Linux, macOS, Windows WSL)
 - Automatic backup system for existing files
 - Security warnings for sensitive files
