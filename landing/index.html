@@ -5,6 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DotProj - Manage Your Dotfiles and Configurations Across Projects</title>
+    <link rel="icon" href="logo.png" type="image/png">
     <meta name="description"
         content="DotProj is a CLI tool that helps you manage your dotfiles and configurations across projects. It is a simple and easy to use tool that allows you to manage your dotfiles and configurations across projects.">
     <meta name="keywords"
@@ -16,11 +17,11 @@
     <meta name="twitter:title" content="DotProj - Manage Your Dotfiles and Configurations Across Projects">
     <meta name="twitter:description"
         content="DotProj is a CLI tool that helps you manage your dotfiles and configurations across projects. It is a simple and easy to use tool that allows you to manage your dotfiles and configurations across projects.">
-    <meta name="twitter:image" content="favicon.ico">
+    <meta name="twitter:image" content="logo.png">
     <meta name="og:title" content="DotProj - Manage Your Dotfiles and Configurations Across Projects">
     <meta name="og:description"
         content="DotProj is a tool that helps you manage your dotfiles and configurations across projects. It is a simple and easy to use tool that allows you to manage your dotfiles and configurations across projects.">
-    <meta name="og:image" content="favicon.ico">
+    <meta name="og:image" content="logo.png">
     <meta name="og:url" content="https://dotproj.ac-jr.com">
     <meta name="og:type" content="website">
     <!-- Load Termynal -->
@@ -464,8 +465,9 @@
     <!-- Hero Section -->
     <header>
         <h1>DotProj</h1>
-        <p>Git-like CLI for managing project configurations. Use familiar commit, push, pull commands to sync your
-            dotfiles across machines.</p>
+        <p>Git-like <strong>CLI for managing project configurations</strong>. Sync your dotfiles/folders/files
+            across machines (with remote repository)</strong>.
+        </p>
         <section class="install-section">
             <div class="install-line">
                 curl -fsSL
@@ -491,7 +493,7 @@
         <div class="workspace-container">
             <nav class="workflow-nav">
                 <button class="tab active" data-tab="setup">🚀 Setup & Install</button>
-                <button class="tab" data-tab="init">📝 Git-like Init</button>
+                <button class="tab" data-tab="init">📝 Init Config Project</button>
                 <button class="tab" data-tab="remote">🌐 Clone & Branch Select</button>
                 <button class="tab" data-tab="management">⚙️ Add & Status</button>
                 <button class="tab" data-tab="sync">🔄 Pull & Push</button>
@@ -644,6 +646,7 @@
                     <span data-ty class="success">🔗 Committed: .env</span>
                     <span data-ty class="success">🔗 Committed: package.json</span>
                     <span data-ty class="success">✅ Committed files/dotfiles for 'my-config'</span>
+                    <span data-ty class="comment"># It will be applied to your project as symlinks.</span>
 
                     <span data-ty class="comment"># Push your changes (like 'git push')</span>
                     <span data-ty="input">dotproj push my-config</span>
