@@ -887,6 +887,10 @@ commit() {
   
   echo "✅ Committed files/dotfiles for '$PROJECT'"
   echo "✅ Configuration applied successfully and symlinked into your project"
+  echo "✅ You can now pull the latest changes from your remote configuration repository"
+  echo "dotproj pull $PROJECT"
+  echo "✅ You can now push your changes to your remote configuration repository"
+  echo "dotproj push $PROJECT"
 }
 
 push() {
