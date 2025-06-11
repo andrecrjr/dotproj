@@ -520,7 +520,8 @@
                     <span data-ty="input"></span>
                     <span data-ty class="comment">🔗 Git Repository (Required)</span>
                     <span data-ty class="comment">Enter Git repository URL to sync your dotfiles across machines:</span>
-                    <span data-ty class="comment"># ssh or https (ssh is recommended)</span>
+                    <span data-ty class="comment"># ssh or https (ssh is recommended) and Private repository is
+                        recommended</span>
                     <span data-ty="input">https://github.com/user/my-config.git</span>
                     <span data-ty class="success">Creating project structure...</span>
                     <span data-ty class="success">Initializing Git repo...</span>
@@ -549,8 +550,12 @@
                     <span data-ty="input">dotproj push my-config</span>
                     <span data-ty class="success">🚀 Pushing files/dotfiles for 'my-config'...</span>
                     <span data-ty class="success">✅ Successfully pushed to remote</span>
-                    <span data-ty class="comment"># 🚀 Configuration applied to your project and saved to remote
-                        repository. </span>
+                    <span data-ty class="comment">✅ You can now pull the latest changes from your remote
+                        configuration repository</span>
+                    <span data-ty class="comment">dotproj pull my-config</span>
+                    <span data-ty class="comment">✅ You can now push your changes to your remote configuration
+                        repository</span>
+                    <span data-ty class="comment">dotproj push my-config</span>
                 </div>
 
                 <!-- Remote Setup Workflow with Branch Selection -->
@@ -590,7 +595,7 @@
                 <!-- File Management Workflow -->
                 <div id="management" class="termynal" style="display:none;" data-termynal data-ty-cursor="█">
                     <span data-ty class="comment"># Add more files to existing project (like 'git add')</span>
-                    <span data-ty="input">dotproj add my-config-app</span>
+                    <span data-ty="input">dotproj add my-config</span>
                     <span data-ty class="comment">Currently tracked files/dotfiles:</span>
                     <span data-ty class="success">✅ .env.local</span>
                     <span data-ty class="success">✅ .vscode/settings.json</span>
@@ -601,9 +606,9 @@
                     <span data-ty class="success">✅ Added: docker-compose.override.yml</span>
 
                     <span data-ty class="comment"># Check project status (like 'git status')</span>
-                    <span data-ty="input">dotproj status my-config-app</span>
-                    <span data-ty class="comment">📊 Status for project 'my-config-app'</span>
-                    <span data-ty class="comment">Project path: /home/user/projects/my-config</span>
+                    <span data-ty="input">dotproj status my-config</span>
+                    <span data-ty class="comment">📊 Status for project 'my-config'</span>
+                    <span data-ty class="comment">Project path: /home/user/projects/my-python-app</span>
                     <span data-ty class="comment">Git repo: https://github.com/user/my-config.git</span>
                     <span data-ty class="comment">Git branch: dotproj-my-config</span>
                     <span data-ty class="success">✅ .env.local</span>
