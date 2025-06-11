@@ -28,7 +28,7 @@
     <style>
         :root {
             --bg-color: #0d0d0d;
-            --text-color: #00ff87;
+            --text-color: #4ac48b;
             --accent-color: #ffd700;
             --prompt-color: #6ec6ff;
             --terminal-bg: #1e1e1e;
@@ -63,11 +63,13 @@
         }
 
         .install-section {
+            flex-direction: column;
             display: flex;
             justify-content: center;
             align-items: center;
             margin-bottom: 2rem;
         }
+
 
         header h1 {
             font-size: 3rem;
@@ -94,19 +96,39 @@
             transition: 0.3s ease;
             font-size: 0.9rem;
             user-select: none;
+
         }
 
         .install-section .install-button {
-            margin-top: 0;
-            margin-left: 1rem;
-            font-size: 1rem;
+            margin-top: 1rem;
         }
 
         .install-section .copy {
             margin-left: 1rem;
             text-align: center;
-            width: 10%;
+            width: 100%;
             font-size: 1.2rem;
+            margin-left: 0;
+            text-align: center;
+            margin-top: 0.6rem;
+
+        }
+
+        @media (min-width: 768px) {
+            .install-section {
+                flex-direction: row;
+            }
+
+            .install-section .copy {
+                width: 10%;
+                margin-left: 1rem;
+                margin-top: 0;
+            }
+
+            .install-section .install-button {
+                margin-left: 1rem;
+                font-size: 1rem;
+            }
         }
 
         .copy:active {
@@ -166,6 +188,7 @@
             transition: 0.3s ease;
             font-size: 0.9rem;
             font-family: 'Courier New', Courier, monospace;
+            font-weight: 800;
         }
 
         .workflow-nav button.active,
@@ -239,6 +262,7 @@
             margin-right: 0.5em;
             color: var(--prompt-color);
             font-weight: bold;
+            word-break: break-all;
         }
 
         /* Success messages */
@@ -316,6 +340,7 @@
             /* Increased spacing to make line breaks more visible */
             display: block;
             /* Ensure each line is treated as a block element */
+            word-break: break-all;
         }
 
         /* Special styling for file paths and commands */
@@ -370,7 +395,6 @@
         }
 
         .feature-list {
-            max-width: 800px;
             margin: 0 auto;
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -491,17 +515,18 @@
                 <div id="init" class="termynal" style="display:none;" data-termynal data-ty-cursor="█">
                     <span data-ty class="comment"># Git-like workflow: Initialize a new project with
                         configurations</span>
-                    <span data-ty="input">dotproj init my-react-app</span>
+                    <span data-ty="input">dotproj init my-config</span>
                     <span data-ty class="comment">Enter project path (default: /home/user/projects/my-react-app):</span>
                     <span data-ty="input"></span>
                     <span data-ty class="comment">🔗 Git Repository (Required)</span>
                     <span data-ty class="comment">Enter Git repository URL to sync your dotfiles across machines:</span>
-                    <span data-ty="input">https://github.com/user/my-react-config.git</span>
+                    <span data-ty class="comment"># ssh or https (ssh is recommended)</span>
+                    <span data-ty="input">https://github.com/user/my-config.git</span>
                     <span data-ty class="success">Creating project structure...</span>
                     <span data-ty class="success">Initializing Git repo...</span>
-                    <span data-ty class="success">✅ Initialized project 'my-react-app'</span>
+                    <span data-ty class="success">✅ Initialized project 'my-config'</span>
 
-                    <span data-ty class="comment">📁 Files/Dotfiles Selection for 'my-react-app'</span>
+                    <span data-ty class="comment">📁 Files/Dotfiles Selection for 'my-config'</span>
                     <span data-ty class="comment">Enter files/dotfiles to track (comma-separated):</span>
                     <span data-ty="input">.env.local, .vscode/, .cursorrules, .prettierrc</span>
                     <span data-ty class="success">✅ Added: .env.local</span>
@@ -509,25 +534,29 @@
                     <span data-ty class="success">✅ Added: .cursorrules</span>
                     <span data-ty class="success">✅ Added: .prettierrc</span>
 
-                    <span data-ty class="comment"># Apply configurations as symlinks (like 'git commit')</span>
-                    <span data-ty="input">dotproj commit my-config-app</span>
-                    <span data-ty class="comment">📋 Committing files/dotfiles for 'my-config-app'...</span>
+                    <span data-ty class="comment"># Apply configurations as symlinks (not literally git commit, just
+                        apply the files/dotfiles)</span>
+                    <span data-ty="input">dotproj commit my-config</span>
+                    <span data-ty class="comment">📋 Committing files/dotfiles for 'my-config'...</span>
                     <span data-ty class="success">🔗 Committed: .env.local</span>
                     <span data-ty class="success">🔗 Committed: .vscode/settings.json</span>
                     <span data-ty class="success">🔗 Committed: .cursorrules</span>
                     <span data-ty class="success">🔗 Committed: .prettierrc</span>
-                    <span data-ty class="success">✅ Committed files/dotfiles for 'my-config-app'</span>
+                    <span data-ty class="success">✅ Committed files/dotfiles for 'my-config'</span>
 
-                    <span data-ty class="comment"># Push to remote (like 'git push')</span>
-                    <span data-ty="input">dotproj push my-config-app</span>
-                    <span data-ty class="success">🚀 Pushing files/dotfiles for 'my-config-app'...</span>
+                    <span data-ty class="comment"># Push to remote (push the files/dotfiles to the remote
+                        repository)</span>
+                    <span data-ty="input">dotproj push my-config</span>
+                    <span data-ty class="success">🚀 Pushing files/dotfiles for 'my-config'...</span>
                     <span data-ty class="success">✅ Successfully pushed to remote</span>
+                    <span data-ty class="comment"># 🚀 Configuration applied to your project and saved to remote
+                        repository. </span>
                 </div>
 
                 <!-- Remote Setup Workflow with Branch Selection -->
                 <div id="remote" class="termynal" style="display:none;" data-termynal data-ty-cursor="█">
-                    <span data-ty class="comment"># Clone configurations from remote repository (like 'git
-                        clone')</span>
+                    <span data-ty class="comment"># Clone configurations from remote repository (clone your
+                        folders/files/dotfiles from the remote repository)</span>
                     <span data-ty="input">dotproj clone team-project</span>
                     <span data-ty class="comment">🌐 Remote Repository Setup</span>
                     <span data-ty class="comment">Enter Git repository URL:</span>
@@ -553,8 +582,9 @@
                     <span data-ty="input">y</span>
                     <span data-ty class="success">🔗 Committed: .vscode/settings.json</span>
                     <span data-ty class="success">🔗 Committed: .env.local</span>
-                    <span data-ty class="success">🔗 Committed: .cursorrules</span>
+                    <span data-ty class="success">🔗 Committed: .cursor</span>
                     <span data-ty class="success">🎉 Clone and commit complete!</span>
+                    <span data-ty class="comment"># Configuration applied to your project.</span>
                 </div>
 
                 <!-- File Management Workflow -->
@@ -573,9 +603,9 @@
                     <span data-ty class="comment"># Check project status (like 'git status')</span>
                     <span data-ty="input">dotproj status my-config-app</span>
                     <span data-ty class="comment">📊 Status for project 'my-config-app'</span>
-                    <span data-ty class="comment">Project path: /home/user/projects/my-react-app</span>
-                    <span data-ty class="comment">Git repo: https://github.com/user/my-react-config.git</span>
-                    <span data-ty class="comment">Git branch: dotproj-my-react-app</span>
+                    <span data-ty class="comment">Project path: /home/user/projects/my-config</span>
+                    <span data-ty class="comment">Git repo: https://github.com/user/my-config.git</span>
+                    <span data-ty class="comment">Git branch: dotproj-my-config</span>
                     <span data-ty class="success">✅ .env.local</span>
                     <span data-ty class="success">✅ .vscode/settings.json</span>
                     <span data-ty class="success">✅ .eslintrc.js</span>
@@ -584,15 +614,15 @@
                     <span data-ty class="comment"># List all projects</span>
                     <span data-ty="input">dotproj list</span>
                     <span data-ty class="comment">Available projects:</span>
-                    <span data-ty class="success">- my-react-app</span>
+                    <span data-ty class="success">- my-config</span>
                     <span data-ty class="success">- team-project</span>
                 </div>
 
                 <!-- Git Sync Workflow -->
                 <div id="sync" class="termynal" style="display:none;" data-termynal data-ty-cursor="█">
                     <span data-ty class="comment"># Pull latest changes from remote (like 'git pull')</span>
-                    <span data-ty="input">dotproj pull my-config-app</span>
-                    <span data-ty class="comment">📥 Pulling files/dotfiles for 'my-config-app'...</span>
+                    <span data-ty="input">dotproj pull my-config</span>
+                    <span data-ty class="comment">📥 Pulling files/dotfiles for 'my-config'...</span>
 
                     <span data-ty class="comment">📋 Available remote branches:</span>
                     <span data-ty class="success"> 1) dotproj-frontend ⭐ (DotProj branch)</span>
@@ -604,17 +634,17 @@
                     <span data-ty class="success">✅ Successfully pulled from remote</span>
 
                     <span data-ty class="comment">💡 Changes pulled successfully. Apply them to your project?</span>
-                    <span data-ty class="comment">Run 'dotproj commit my-react-app' now? (y/N):</span>
+                    <span data-ty class="comment">Run 'dotproj commit my-config' now? (y/N):</span>
                     <span data-ty="input">y</span>
                     <span data-ty class="success">🔗 Committed: .env</span>
                     <span data-ty class="success">🔗 Committed: package.json</span>
-                    <span data-ty class="success">✅ Committed files/dotfiles for 'my-config-app'</span>
+                    <span data-ty class="success">✅ Committed files/dotfiles for 'my-config'</span>
 
                     <span data-ty class="comment"># Push your changes (like 'git push')</span>
-                    <span data-ty="input">dotproj push my-react-app</span>
-                    <span data-ty class="success">🚀 Pushing files/dotfiles for 'my-config-app'...</span>
+                    <span data-ty="input">dotproj push my-config</span>
+                    <span data-ty class="success">🚀 Pushing files/dotfiles for 'my-config'...</span>
                     <span data-ty class="success">✅ Successfully pushed to remote</span>
-                    <span data-ty class="success">✅ Push completed for 'my-react-app'</span>
+                    <span data-ty class="success">✅ Push completed for 'my-config'</span>
                 </div>
             </div>
         </div>

@@ -886,6 +886,7 @@ commit() {
   fi
   
   echo "✅ Committed files/dotfiles for '$PROJECT'"
+  echo "✅ Configuration applied and symlinked to your project"
 }
 
 push() {
