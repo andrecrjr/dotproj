@@ -37,6 +37,23 @@
             --error-color: #ff6b6b;
             --comment-color: #6b7280;
             --warning-color: #f59e0b;
+            /* Mobile-first spacing variables */
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2rem;
+            --spacing-xl: 3rem;
+            --spacing-2xl: 4rem;
+            --spacing-3xl: 6rem;
+            /* Mobile-first font sizes */
+            --font-xs: 0.75rem;
+            --font-sm: 0.875rem;
+            --font-base: 1rem;
+            --font-lg: 1.125rem;
+            --font-xl: 1.25rem;
+            --font-2xl: 1.5rem;
+            --font-3xl: 2rem;
+            --font-4xl: 2.5rem;
         }
 
         * {
@@ -50,106 +67,58 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             scroll-behavior: smooth;
+            line-height: 1.6;
         }
 
+        /* Mobile-first Header */
         header {
-            padding: 5rem 2rem;
+            padding: var(--spacing-lg);
             text-align: center;
-            height: 100vh;
+            min-height: 100vh;
             background: #111;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            gap: var(--spacing-lg);
         }
-
-        .install-section {
-            flex-direction: column;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
 
         header h1 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
+            font-size: var(--font-3xl);
             text-shadow: 0 0 20px var(--text-color);
+            margin-bottom: var(--spacing-sm);
         }
 
         header p {
-            font-size: 1.2rem;
-            max-width: 600px;
-            margin: 0 auto 2rem;
+            font-size: var(--font-base);
             opacity: 0.9;
+            margin-bottom: var(--spacing-md);
+            max-width: 90%;
         }
 
-        .install-button {
-            background: var(--text-color);
-            color: var(--bg-color);
-            border: 1px solid var(--text-color);
-            padding: 1rem 1.5rem;
-            margin-top: 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            text-align: left;
-            transition: 0.3s ease;
-            font-size: 0.9rem;
-            user-select: none;
-
-        }
-
-        .install-section .install-button {
-            margin-top: 1rem;
-        }
-
-        .install-section .copy {
-            margin-left: 1rem;
-            text-align: center;
+        /* Mobile-first Install Section */
+        .install-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: var(--spacing-sm);
             width: 100%;
-            font-size: 1.2rem;
-            margin-left: 0;
-            text-align: center;
-            margin-top: 0.6rem;
-
+            max-width: 500px;
         }
-
-        @media (min-width: 768px) {
-            .install-section {
-                flex-direction: row;
-            }
-
-            .install-section .copy {
-                width: 10%;
-                margin-left: 1rem;
-                margin-top: 0;
-            }
-
-            .install-section .install-button {
-                margin-left: 1rem;
-                font-size: 1rem;
-            }
-        }
-
-        .copy:active {
-            opacity: 0.5;
-            transform: translateY(4px);
-        }
-
 
         .install-line {
             width: 100%;
             background: var(--terminal-bg);
-            padding: 1rem 1.5rem;
+            padding: var(--spacing-md);
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: var(--font-sm);
             word-break: break-all;
-            display: inline-block;
             color: var(--prompt-color);
             box-shadow: 0 4px 12px rgba(0, 255, 135, 0.1);
             border: 1px solid var(--text-color);
             transition: all 0.3s ease;
+            overflow-x: auto;
         }
 
         .install-line:hover {
@@ -163,33 +132,118 @@
             font-weight: bold;
         }
 
-        .workspace-container {
-            display: flex;
-            flex-direction: row;
-            gap: 2rem;
-            width: 100%;
-            padding: 0 2rem;
+        .install-button {
+            background: var(--text-color);
+            color: var(--bg-color);
+            border: 1px solid var(--text-color);
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.3s ease;
+            font-size: var(--font-sm);
+            user-select: none;
+            white-space: nowrap;
+            text-decoration: none;
+            display: inline-block;
         }
 
-        .workflow-nav {
-            width: 250px;
+        .install-button:hover,
+        .install-button:active {
+            opacity: 0.8;
+            transform: translateY(2px);
+        }
+
+        .copy {
+            background: var(--terminal-bg);
+            color: var(--text-color);
+            border: 1px solid var(--text-color);
+        }
+
+        .copy:hover {
+            background: var(--text-color);
+            color: var(--bg-color);
+        }
+
+        /* Navigation buttons */
+        nav.install-section {
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: var(--spacing-xs);
+            justify-content: center;
+        }
+
+        /* Mobile-first Workspace */
+        .workspace {
+            padding: var(--spacing-2xl) var(--spacing-lg);
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            justify-content: flex-start;
+            align-items: center;
+            color: var(--accent-color);
+        }
+
+        .workspace h2 {
+            font-size: var(--font-2xl);
+            margin-bottom: var(--spacing-md);
+            text-align: center;
+        }
+
+        .workspace-description {
+            font-size: var(--font-base);
+            margin-bottom: var(--spacing-xl);
+            opacity: 0.9;
+            text-align: center;
+            max-width: 90%;
+        }
+
+        .workspace-container {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        /* Mobile-first Navigation */
+        .workflow-nav {
+            display: flex;
+            flex-direction: row;
+            gap: var(--spacing-xs);
+            overflow-x: auto;
+            padding-bottom: var(--spacing-xs);
+            scrollbar-width: thin;
+            scrollbar-color: var(--text-color) var(--terminal-bg);
+        }
+
+        .workflow-nav::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .workflow-nav::-webkit-scrollbar-track {
+            background: var(--terminal-bg);
+        }
+
+        .workflow-nav::-webkit-scrollbar-thumb {
+            background: var(--text-color);
+            border-radius: 2px;
         }
 
         .workflow-nav button {
             background: var(--terminal-bg);
             color: var(--text-color);
             border: 1px solid var(--text-color);
-            padding: 1rem;
+            padding: var(--spacing-sm) var(--spacing-md);
             border-radius: 6px;
             cursor: pointer;
-            text-align: left;
+            text-align: center;
             transition: 0.3s ease;
-            font-size: 0.9rem;
+            font-size: var(--font-xs);
             font-family: 'Courier New', Courier, monospace;
-            font-weight: 800;
+            font-weight: 600;
+            white-space: nowrap;
+            min-width: fit-content;
         }
 
         .workflow-nav button.active,
@@ -201,27 +255,24 @@
         }
 
         .workspace-terminal {
-            flex: 1;
-            width: auto;
+            width: 100%;
         }
 
-        /**
-         * Enhanced Termynal Styles
-         */
+        /* Enhanced Termynal Styles - Mobile First */
         [data-termynal] {
             width: 100%;
-            max-width: 100%;
             background: var(--terminal-bg);
             color: var(--text-color);
-            font-size: 16px;
+            font-size: 14px;
             font-family: 'Fira Code', 'JetBrains Mono', 'SF Mono', Consolas, 'Liberation Mono', Menlo, Monaco, 'Courier New', Courier, monospace;
             border-radius: 12px;
-            padding: 75px 30px 30px;
+            padding: 60px var(--spacing-md) var(--spacing-md);
             position: relative;
             box-sizing: border-box;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(0, 255, 135, 0.1);
             backdrop-filter: blur(10px);
+            overflow-x: auto;
         }
 
         [data-termynal]:before {
@@ -230,22 +281,22 @@
             top: 15px;
             left: 15px;
             display: inline-block;
-            width: 15px;
-            height: 15px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
             background: #d9515d;
-            box-shadow: 25px 0 0 #f4c025, 50px 0 0 #3ec930;
+            box-shadow: 20px 0 0 #f4c025, 40px 0 0 #3ec930;
         }
 
         [data-termynal]:not([id="init"], [id="remote"], [id="management"], [id="sync"], [id="setup"])::after {
             content: 'bash - ~/.dotproj';
             position: absolute;
-            top: 10px;
+            top: 8px;
             left: 0;
             width: 100%;
             text-align: center;
             color: #666;
-            font-size: 12px;
+            font-size: 10px;
             letter-spacing: 1px;
             font-weight: 500;
         }
@@ -263,51 +314,35 @@
             margin-right: 0.5em;
             color: var(--prompt-color);
             font-weight: bold;
-            word-break: break-all;
         }
 
-        /* Success messages */
+        /* Status message styles */
         [data-ty].success {
             color: var(--success-color);
             font-weight: 500;
         }
 
-        [data-ty].success:before {
+        [data-ty].success:before,
+        [data-ty].warning:before,
+        [data-ty].comment:before,
+        [data-ty].error:before {
             content: '';
             margin-right: 0;
         }
 
-        /* Warning messages */
         [data-ty].warning {
             color: var(--warning-color);
             font-weight: 500;
         }
 
-        [data-ty].warning:before {
-            content: '';
-            margin-right: 0;
-        }
-
-        /* Comment/info messages */
         [data-ty].comment {
             color: var(--comment-color);
             font-style: italic;
         }
 
-        [data-ty].comment:before {
-            content: '';
-            margin-right: 0;
-        }
-
-        /* Error messages */
         [data-ty].error {
             color: var(--error-color);
             font-weight: 500;
-        }
-
-        [data-ty].error:before {
-            content: '';
-            margin-right: 0;
         }
 
         /* Enhanced cursor animation */
@@ -334,81 +369,47 @@
             }
         }
 
-        /* Add some breathing room between lines */
         [data-ty] {
             line-height: 1.6;
             margin-bottom: 0.5em;
-            /* Increased spacing to make line breaks more visible */
             display: block;
-            /* Ensure each line is treated as a block element */
-            word-break: break-all;
+            word-break: break-word;
         }
 
-        /* Special styling for file paths and commands */
-        .path {
-            color: var(--accent-color);
-            font-weight: 500;
-        }
-
-        .command {
-            color: var(--text-color);
-            font-weight: 600;
-        }
-
-        .workspace {
-            display: flex;
-            justify-content: center;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 2rem;
-            color: var(--accent-color);
-            padding: 4rem 2rem;
-            min-height: 100vh;
-        }
-
-        .commands {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .workspace-description {
-            font-size: 1.2rem;
-            margin: 0 auto 2rem;
-            opacity: 0.9;
-        }
-
+        /* Mobile-first Features Section */
         .features {
-            padding: 4rem 2rem;
+            padding: var(--spacing-2xl) var(--spacing-lg);
             background: #111;
             text-align: center;
-            height: 100vh;
+            min-height: auto;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
         }
 
-        h2 {
-            font-size: 2rem;
-            margin-bottom: 2rem;
+        .features h2 {
+            font-size: var(--font-2xl);
+            margin-bottom: var(--spacing-xl);
             color: var(--accent-color);
         }
 
         .feature-list {
-            margin: 0 auto;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: 1fr;
+            gap: var(--spacing-lg);
+            width: 100%;
+            max-width: 1200px;
         }
 
         .feature {
             background: var(--terminal-bg);
-            padding: 1.5rem;
+            padding: var(--spacing-lg);
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0, 255, 135, 0.05);
             border: 1px solid rgba(0, 255, 135, 0.1);
             transition: all 0.3s ease;
+            text-align: left;
         }
 
         .feature:hover {
@@ -417,17 +418,32 @@
             border-color: rgba(0, 255, 135, 0.3);
         }
 
+        .feature h3 {
+            font-size: var(--font-lg);
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-color);
+        }
+
+        .feature p {
+            font-size: var(--font-sm);
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        /* Footer */
         footer {
-            padding: 2rem;
+            padding: var(--spacing-xl) var(--spacing-lg);
             text-align: center;
             background: #0a0a0a;
-            font-size: 0.9rem;
+            font-size: var(--font-sm);
             color: #888;
+            line-height: 1.8;
         }
 
         a {
             color: var(--prompt-color);
             text-decoration: none;
+            transition: color 0.3s ease;
         }
 
         a:hover {
@@ -435,27 +451,160 @@
             color: var(--text-color);
         }
 
-        @media (max-width: 768px) {
+        /* Tablet Styles */
+        @media (min-width: 768px) {
+            :root {
+                --font-base: 1.125rem;
+                --font-lg: 1.25rem;
+                --font-xl: 1.5rem;
+                --font-2xl: 1.875rem;
+                --font-3xl: 2.5rem;
+                --font-4xl: 3rem;
+            }
+
+            header {
+                padding: var(--spacing-3xl) var(--spacing-xl);
+            }
+
+            header p {
+                font-size: var(--font-lg);
+                max-width: 600px;
+            }
+
+            .install-section {
+                flex-direction: row;
+                max-width: 90%;
+                gap: var(--spacing-md);
+            }
+
+            .install-line {
+                font-size: var(--font-base);
+            }
+
             .workspace-container {
-                flex-direction: column;
+                flex-direction: row;
+                gap: var(--spacing-xl);
             }
 
             .workflow-nav {
-                width: 100%;
-                flex-direction: row;
-                overflow-x: auto;
-                gap: 0.5rem;
+                flex-direction: column;
+                width: 280px;
+                overflow-x: visible;
+                gap: var(--spacing-sm);
             }
 
             .workflow-nav button {
-                white-space: nowrap;
-                font-size: 0.8rem;
-                padding: 0.75rem;
+                font-size: var(--font-sm);
+                padding: var(--spacing-md) var(--spacing-lg);
+                text-align: left;
             }
 
             [data-termynal] {
-                font-size: 14px;
-                padding: 60px 20px 20px;
+                font-size: 16px;
+                padding: 75px var(--spacing-xl) var(--spacing-xl);
+            }
+
+            [data-termynal]:before {
+                width: 15px;
+                height: 15px;
+                box-shadow: 25px 0 0 #f4c025, 50px 0 0 #3ec930;
+            }
+
+            [data-termynal]:not([id="init"], [id="remote"], [id="management"], [id="sync"], [id="setup"])::after {
+                font-size: 12px;
+                top: 10px;
+            }
+
+            .feature-list {
+                grid-template-columns: repeat(2, 1fr);
+                gap: var(--spacing-xl);
+            }
+        }
+
+        /* Desktop Styles */
+        @media (min-width: 1024px) {
+            header {
+                height: 100vh;
+            }
+
+            .workspace {
+                min-height: 100vh;
+                justify-content: center;
+            }
+
+            .features {
+                min-height: 100vh;
+            }
+
+            .feature-list {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        /* Large Desktop */
+        @media (min-width: 1200px) {
+            .workspace-container {
+                max-width: 1400px;
+            }
+
+            .workflow-nav {
+                width: 320px;
+            }
+        }
+
+        /* Extra Small Mobile */
+        @media (max-width: 480px) {
+            :root {
+                --spacing-sm: 0.75rem;
+                --spacing-md: 1rem;
+                --spacing-lg: 1.5rem;
+                --spacing-xl: 2rem;
+                --spacing-2xl: 2.5rem;
+            }
+
+            header {
+                padding: var(--spacing-lg) var(--spacing-sm);
+            }
+
+            header h1 {
+                font-size: var(--font-2xl);
+            }
+
+            .install-line {
+                font-size: var(--font-xs);
+                padding: var(--spacing-sm);
+            }
+
+            .workflow-nav button {
+                padding: var(--spacing-xs) var(--spacing-sm);
+                font-size: 0.65rem;
+            }
+
+            [data-termynal] {
+                font-size: 12px;
+                padding: 50px var(--spacing-sm) var(--spacing-sm);
+            }
+
+            .feature {
+                padding: var(--spacing-md);
+            }
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            :root {
+                --text-color: #00ff88;
+                --prompt-color: #00aaff;
+                --accent-color: #ffff00;
+            }
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
             }
         }
     </style>
@@ -474,7 +623,6 @@
                 https://raw.githubusercontent.com/andrecrjr/dotproj/master/install.sh | bash
             </div>
             <button class="install-button copy" onclick="copyToClipboard()">🔗 Copy</button>
-
         </section>
         <nav class="install-section">
             <a href="#workspace"><button class="install-button">🚀 Quick Start</button></a>
@@ -483,7 +631,6 @@
                     class="install-button">👋 Contact</button></a>
         </nav>
     </header>
-
     <!-- Terminal Workspaces -->
     <section class="workspace" id="workspace">
         <h2>Git-like Workflow for Configuration Management</h2>
@@ -512,7 +659,6 @@
                     <span data-ty class="success">Version: 1.0.0</span>
                     <span data-ty class="success">✅ Setup complete! You're ready to start using DotProj.</span>
                 </div>
-
                 <!-- Project Initialization Workflow -->
                 <div id="init" class="termynal" style="display:none;" data-termynal data-ty-cursor="█">
                     <span data-ty class="comment"># Git-like workflow: Initialize a new project with
@@ -528,7 +674,6 @@
                     <span data-ty class="success">Creating project structure...</span>
                     <span data-ty class="success">Initializing Git repo...</span>
                     <span data-ty class="success">✅ Initialized project 'my-config'</span>
-
                     <span data-ty class="comment">📁 Files/Dotfiles Selection for 'my-config'</span>
                     <span data-ty class="comment">Enter files/dotfiles to track (comma-separated):</span>
                     <span data-ty="input">.env.local, .vscode/, .cursorrules, .prettierrc</span>
@@ -536,7 +681,6 @@
                     <span data-ty class="success">✅ Added: .vscode/</span>
                     <span data-ty class="success">✅ Added: .cursorrules</span>
                     <span data-ty class="success">✅ Added: .prettierrc</span>
-
                     <span data-ty class="comment"># Apply configurations as symlinks (not literally git commit, just
                         apply the files/dotfiles)</span>
                     <span data-ty="input">dotproj commit my-config</span>
@@ -546,7 +690,6 @@
                     <span data-ty class="success">🔗 Committed: .cursorrules</span>
                     <span data-ty class="success">🔗 Committed: .prettierrc</span>
                     <span data-ty class="success">✅ Committed files/dotfiles for 'my-config'</span>
-
                     <span data-ty class="comment"># Push to remote (push the files/dotfiles to the remote
                         repository)</span>
                     <span data-ty="input">dotproj push my-config</span>
@@ -559,7 +702,6 @@
                         repository</span>
                     <span data-ty class="comment">dotproj push my-config</span>
                 </div>
-
                 <!-- Remote Setup Workflow with Branch Selection -->
                 <div id="remote" class="termynal" style="display:none;" data-termynal data-ty-cursor="█">
                     <span data-ty class="comment"># Clone configurations from remote repository (clone your
@@ -570,7 +712,6 @@
                     <span data-ty="input">https://github.com/team/project-configs.git</span>
                     <span data-ty class="success">📥 Cloning repository to dotproj storage...</span>
                     <span data-ty class="success">✅ Repository cloned successfully!</span>
-
                     <span data-ty class="comment">📋 Available branches in repository:</span>
                     <span data-ty
                         class="comment">════════════════════════════════════════════════════════════════</span>
@@ -578,12 +719,10 @@
                     <span data-ty class="success"> 2) dotproj-backend ⭐ (DotProj branch)</span>
                     <span data-ty class="success"> 3) dotproj-fullstack ⭐ (DotProj branch)</span>
                     <span data-ty class="success"> 4) main</span>
-
                     <span data-ty class="comment">💡 Choose a branch to restore configuration from:</span>
                     <span data-ty class="comment">Select branch number (required):</span>
                     <span data-ty="input">1</span>
                     <span data-ty class="success">✅ Selected branch: dotproj-frontend</span>
-
                     <span data-ty class="comment">Apply files from 'dotproj-frontend' to current project now?
                         (y/N):</span>
                     <span data-ty="input">y</span>
@@ -593,7 +732,6 @@
                     <span data-ty class="success">🎉 Clone and commit complete!</span>
                     <span data-ty class="comment"># Configuration applied to your project.</span>
                 </div>
-
                 <!-- File Management Workflow -->
                 <div id="management" class="termynal" style="display:none;" data-termynal data-ty-cursor="█">
                     <span data-ty class="comment"># Add more files to existing project (like 'git add')</span>
@@ -606,7 +744,6 @@
                     <span data-ty class="success">✅ Added: .eslintrc.js</span>
                     <span data-ty class="success">✅ Added: .gitignore</span>
                     <span data-ty class="success">✅ Added: docker-compose.override.yml</span>
-
                     <span data-ty class="comment"># Check project status (like 'git status')</span>
                     <span data-ty="input">dotproj status my-config</span>
                     <span data-ty class="comment">📊 Status for project 'my-config'</span>
@@ -617,20 +754,17 @@
                     <span data-ty class="success">✅ .vscode/settings.json</span>
                     <span data-ty class="success">✅ .eslintrc.js</span>
                     <span data-ty class="success">✅ .gitignore</span>
-
                     <span data-ty class="comment"># List all projects</span>
                     <span data-ty="input">dotproj list</span>
                     <span data-ty class="comment">Available projects:</span>
                     <span data-ty class="success">- my-config</span>
                     <span data-ty class="success">- team-project</span>
                 </div>
-
                 <!-- Git Sync Workflow -->
                 <div id="sync" class="termynal" style="display:none;" data-termynal data-ty-cursor="█">
                     <span data-ty class="comment"># Pull latest changes from remote (like 'git pull')</span>
                     <span data-ty="input">dotproj pull my-config</span>
                     <span data-ty class="comment">📥 Pulling files/dotfiles for 'my-config'...</span>
-
                     <span data-ty class="comment">📋 Available remote branches:</span>
                     <span data-ty class="success"> 1) dotproj-frontend ⭐ (DotProj branch)</span>
                     <span data-ty class="success"> 2) dotproj-backend ⭐ (DotProj branch)</span>
@@ -639,7 +773,6 @@
                     <span data-ty="input">2</span>
                     <span data-ty class="success">✅ Selected branch: dotproj-backend</span>
                     <span data-ty class="success">✅ Successfully pulled from remote</span>
-
                     <span data-ty class="comment">💡 Changes pulled successfully. Apply them to your project?</span>
                     <span data-ty class="comment">Run 'dotproj commit my-config' now? (y/N):</span>
                     <span data-ty="input">y</span>
@@ -647,7 +780,6 @@
                     <span data-ty class="success">🔗 Committed: package.json</span>
                     <span data-ty class="success">✅ Committed files/dotfiles for 'my-config'</span>
                     <span data-ty class="comment"># It will be applied to your project as symlinks.</span>
-
                     <span data-ty class="comment"># Push your changes (like 'git push')</span>
                     <span data-ty="input">dotproj push my-config</span>
                     <span data-ty class="success">🚀 Pushing files/dotfiles for 'my-config'...</span>
@@ -657,7 +789,6 @@
             </div>
         </div>
     </section>
-
     <!-- Why Use Section -->
     <section class="features" id="features">
         <h2>Why use DotProj?</h2>
@@ -689,7 +820,6 @@
             </div>
         </div>
     </section>
-
     <!-- Footer -->
     <footer id="footer">
         &copy; 2025 AC-JR • Built with ❤️ for developers<br />
@@ -701,7 +831,6 @@
         <a href="https://www.linkedin.com/in/andrecrjr/" target="_blank" rel="noopener noreferrer">LinkedIn</a> •
         <a href="https://www.ac-jr.com" target="_blank" rel="noopener noreferrer">Portfolio</a>
     </footer>
-
     <!-- JS for Tabs -->
     <script>
         const tabs = document.querySelectorAll('.tab');
@@ -736,7 +865,6 @@
             setTimeout(() => initTermynal('setup'), 500);
         });
     </script>
-
     <script>
         function copyToClipboard() {
             const text = document.querySelector('.install-line').textContent;
