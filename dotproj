@@ -2,6 +2,15 @@
 
 # DotProj CLI - Manages project-specific dotfiles with Git versioning
 
+# Color constants for better UX
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
 CONFIG_FILE="$HOME/.dotproj/config"
 DOTFILES_ROOT="$HOME/.dotproj/projects"
 CMD="$1"
@@ -12,9 +21,9 @@ mkdir -p "$DOTFILES_ROOT"
 # Check if Git is available
 check_git() {
   if ! command -v git >/dev/null 2>&1; then
-    echo "❌ Error: Git is required but not installed."
+    echo -e "${RED}❌ Error: Git is required but not installed.${NC}"
     echo ""
-    echo "📦 Please install Git first:"
+    echo -e "${BLUE}📦 Please install Git first:${NC}"
     echo "  • Ubuntu/Debian: sudo apt update && sudo apt install git"
     echo "  • CentOS/RHEL:   sudo yum install git"
     echo "  • Fedora:        sudo dnf install git"
@@ -35,22 +44,88 @@ check_git_config() {
   git_email=$(git config --global user.email 2>/dev/null || echo "")
   
   if [ -z "$git_name" ] || [ -z "$git_email" ]; then
-    echo "⚠️  Git is not fully configured for commits."
+    echo -e "${YELLOW}⚠️  Git is not fully configured for commits.${NC}"
     echo ""
-    echo "🔧 Please configure Git with your name and email:"
-    echo "   git config --global user.name \"Your Name\""
-    echo "   git config --global user.email \"your.email@example.com\""
+    echo -e "${BLUE}🔧 Please configure Git with your name and email:${NC}"
+    echo -e "   ${CYAN}git config --global user.name \"Your Name\"${NC}"
+    echo -e "   ${CYAN}git config --global user.email \"your.email@example.com\"${NC}"
     echo ""
     echo "This is required for Git commits and synchronization."
     echo ""
     echo -n "Continue anyway? (y/N): "
     read -r continue_choice
     if [ "$continue_choice" != "y" ] && [ "$continue_choice" != "Y" ]; then
-      echo "Setup cancelled. Please configure Git and try again."
+      echo -e "${RED}Setup cancelled. Please configure Git and try again.${NC}"
       exit 1
     fi
     echo ""
   fi
+}
+
+# Check for uncommitted and unpushed changes
+check_project_changes() {
+  local project_dir="$1"
+  local show_warnings="${2:-true}"
+  
+  if [ ! -d "$project_dir" ]; then
+    return 0
+  fi
+  
+  cd "$project_dir" || return 0
+  
+  # Check if git repo exists
+  if [ ! -d ".git" ]; then
+    return 0
+  fi
+  
+  local has_uncommitted=false
+  local has_unpushed=false
+  local current_branch
+  current_branch=$(git branch --show-current 2>/dev/null || echo "")
+  
+  # Check for uncommitted changes
+  if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+    has_uncommitted=true
+  fi
+  
+  # Check for unpushed changes (only if we have a current branch)
+  if [ -n "$current_branch" ]; then
+    # Check if remote branch exists
+    if git show-ref --verify --quiet "refs/remotes/origin/$current_branch"; then
+      # Compare local vs remote
+      local local_commits remote_commits
+      local_commits=$(git rev-list "origin/$current_branch..$current_branch" 2>/dev/null | wc -l)
+      if [ "$local_commits" -gt 0 ]; then
+        has_unpushed=true
+      fi
+    else
+      # No remote branch exists, so local commits are unpushed
+      local total_commits
+      total_commits=$(git rev-list --count "$current_branch" 2>/dev/null || echo "0")
+      if [ "$total_commits" -gt 0 ]; then
+        has_unpushed=true
+      fi
+    fi
+  fi
+  
+  # Show warnings if requested
+  if [ "$show_warnings" = "true" ]; then
+    if [ "$has_uncommitted" = "true" ]; then
+      echo -e "${RED}⚠️  You have uncommitted changes in your dotfiles${NC}"
+      echo -e "   Run '${CYAN}dotproj push $PROJECT${NC}' to commit and push them"
+    fi
+    
+    if [ "$has_unpushed" = "true" ]; then
+      echo -e "${RED}⚠️  You have unpushed dotfiles changes${NC}"
+      echo -e "   Run '${CYAN}dotproj push $PROJECT${NC}' to push them to remote repository"
+    fi
+  fi
+  
+  # Return status: 0 = no changes, 1 = uncommitted, 2 = unpushed, 3 = both
+  local status=0
+  [ "$has_uncommitted" = "true" ] && status=$((status + 1))
+  [ "$has_unpushed" = "true" ] && status=$((status + 2))
+  return $status
 }
 
 get_relative_path() {
@@ -226,8 +301,6 @@ get_version() {
     echo "1.0.0"
   fi
 }
-
-
 
 version() {
   local current_version
@@ -444,7 +517,7 @@ setup() {
     echo "✅ DotProj already in PATH"
   fi
   
-  echo "🎉 Setup complete! Run 'dotproj --help' for available commands"
+  echo -e "${GREEN}🎉 Setup complete! Run '${CYAN}dotproj --help${NC}${GREEN}' for available commands${NC}"
 }
 
 init() {
@@ -454,7 +527,7 @@ init() {
   local project_dir="$DOTFILES_ROOT/$PROJECT"
 
   if [ -d "$project_dir" ]; then
-    echo "Error: Project '$PROJECT' already exists in $project_dir"
+    echo -e "${RED}Error: Project '$PROJECT' already exists in $project_dir${NC}"
     exit 1
   fi
 
@@ -487,14 +560,14 @@ init() {
     read -r git_repo
 
     if [ -z "$git_repo" ]; then
-      echo "Error: Git repository URL is required"
-      continue
+          echo -e "${RED}Error: Git repository URL is required${NC}"
+    continue
     fi
 
     if git ls-remote "$git_repo" >/dev/null 2>&1; then
       break
     else
-      echo "Error: Invalid Git repository URL"
+      echo -e "${RED}Error: Invalid Git repository URL${NC}"
     fi
   done
 
@@ -535,7 +608,7 @@ clone() {
   local git_repo="$3"
 
   if [ -d "$project_dir" ]; then
-    echo "Error: Project '$PROJECT' already exists in $project_dir"
+    echo -e "${RED}Error: Project '$PROJECT' already exists in $project_dir${NC}"
     exit 1
   fi
 
@@ -589,7 +662,7 @@ clone() {
     exit 1
   fi
 
-  echo "✅ Repository cloned successfully!"
+  echo -e "${GREEN}✅ Repository cloned successfully!${NC}"
 
   # Switch to project-specific branch or let user choose
   cd "$project_dir" || exit 1
@@ -820,6 +893,23 @@ add() {
   
   echo ""
   echo "✅ Successfully added and committed files/dotfiles to '$PROJECT'"
+  
+  # Check for uncommitted/unpushed changes and show next steps
+  check_project_changes "$project_dir" "false"
+  local change_status=$?
+  
+  echo ""
+  if [ $change_status -eq 0 ]; then
+    echo -e "${GREEN}✅ Your dotfiles are up to date with the remote repository${NC}"
+  else
+    if [ $((change_status & 1)) -eq 1 ]; then
+      echo -e "${RED}⚠️  You have uncommitted changes in your dotfiles${NC}"
+    fi
+    if [ $((change_status & 2)) -eq 2 ]; then
+      echo -e "${RED}⚠️  You have unpushed dotfiles changes${NC}"
+    fi
+    echo -e "💡 Push your changes to sync with remote: ${CYAN}dotproj push $PROJECT${NC}"
+  fi
 }
 
 remove() {
@@ -898,10 +988,24 @@ commit() {
   
   echo "✅ Committed files/dotfiles for '$PROJECT'"
   echo "✅ Configuration applied successfully and symlinked into your project"
-  echo "✅ You can now pull the latest changes from your remote configuration repository"
-  echo "dotproj pull $PROJECT"
-  echo "✅ You can now push your changes to your remote configuration repository"
-  echo "dotproj push $PROJECT"
+  
+  # Check for uncommitted/unpushed changes and show appropriate next steps
+  check_project_changes "$project_dir" "false"
+  local change_status=$?
+  
+  echo ""
+  if [ $change_status -eq 0 ]; then
+    echo -e "${GREEN}✅ Your dotfiles are up to date with the remote repository${NC}"
+    echo -e "💡 You can now pull the latest changes: ${CYAN}dotproj pull $PROJECT${NC}"
+  else
+    if [ $((change_status & 1)) -eq 1 ]; then
+      echo -e "${RED}⚠️  You have uncommitted changes in your dotfiles${NC}"
+    fi
+    if [ $((change_status & 2)) -eq 2 ]; then
+      echo -e "${RED}⚠️  You have unpushed dotfiles changes${NC}"
+    fi
+    echo -e "💡 Push your changes to sync with remote: ${CYAN}dotproj push $PROJECT${NC}"
+  fi
 }
 
 push() {
@@ -987,6 +1091,23 @@ pull() {
 
   echo "📥 Pulling files/dotfiles for '$PROJECT'..."
   cd "$project_dir" || exit 1
+  
+  # Check for uncommitted changes before pulling
+  check_project_changes "$project_dir" "false"
+  local change_status=$?
+  if [ $((change_status & 1)) -eq 1 ]; then
+    echo ""
+    echo -e "${RED}⚠️  Warning: You have uncommitted changes in your dotfiles${NC}"
+    echo -e "${YELLOW}   This may cause conflicts during pull operation.${NC}"
+    echo ""
+    echo -n "Continue anyway? (y/N): "
+    read -r continue_choice
+    if [ "$continue_choice" != "y" ] && [ "$continue_choice" != "Y" ]; then
+      echo -e "Pull cancelled. Consider running '${CYAN}dotproj push $PROJECT${NC}' first."
+      exit 1
+    fi
+    echo ""
+  fi
   
   # Check if there are multiple remote branches available
   local remote_branches
@@ -1129,6 +1250,13 @@ status() {
   [ -n "$stored_branch" ] && echo "Git branch: $stored_branch" || echo "Git branch: dotproj-$PROJECT (default)"
   echo ""
 
+  # Check for uncommitted/unpushed changes
+  check_project_changes "$project_dir" "true"
+  local change_status=$?
+  if [ $change_status -gt 0 ]; then
+    echo ""
+  fi
+
   if [ -d "$dotfiles_dir" ] && [ "$(find "$dotfiles_dir" -type f | wc -l)" -gt 0 ]; then
     echo "📁 Tracked dotfiles:"
     find "$dotfiles_dir" -type f | while IFS= read -r file; do
@@ -1189,8 +1317,6 @@ list() {
     fi
   fi
 }
-
-
 
 case "$CMD" in
   setup)
