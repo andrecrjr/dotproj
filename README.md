@@ -28,12 +28,39 @@ Eliminates the hassle of manually copying configuration files like:
 
 **Key Features**:
 - **Git-like workflow** - familiar commands for developers
+- **Smart auto-detection** - no need to specify project names in most cases
 - **Smart branch selection** - choose configurations from different branches
 - **Centralizes** configurations in organized storage
 - **Symlinks** files for real-time synchronization
 - **Smart backups** - one backup per file, no clutter
 - **Git versioning** for team collaboration
 - **Cross-machine sync** via remote repositories (create a private repo)
+
+## 🎯 Smart Auto-Detection
+
+DotProj automatically detects which project to work with based on your current directory:
+
+- **Single project**: Auto-detects and uses it (shows `🎯 Auto-detected project: name`)
+- **Multiple projects**: Shows numbered list for quick selection
+- **No projects**: Provides helpful guidance on next steps
+
+**Examples**:
+```bash
+# Single project in directory
+$ dotproj status
+🎯 Auto-detected project: my-app
+📊 Status for project 'my-app'...
+
+# Multiple projects in directory  
+$ dotproj commit
+📋 Multiple projects found in current directory:
+ 1) frontend
+ 2) backend
+Select project number: 1
+✅ Selected project: frontend
+```
+
+This makes commands much faster to use while keeping full control when needed.
 
 ## 🔒 Security & Privacy
 
@@ -68,20 +95,20 @@ dotproj init my-project
 #    → Files are copied to storage
 
 # 3. Apply files as symlinks to your project
-dotproj commit my-project
+dotproj commit           # Auto-detects 'my-project' in current directory
 
 # 4. Work normally - changes auto-saved via symlinks
 
 # 5. Push changes to Git (when ready)
-dotproj push my-project
+dotproj push            # Auto-detects 'my-project' in current directory
 ```
 
 **Add more files later**:
 ```bash
 # Add new files to existing project
-dotproj add my-project        # Interactive selection
-dotproj commit my-project     # Apply new files as symlinks
-dotproj push my-project       # Push changes to remote
+dotproj add              # Auto-detects project, interactive selection
+dotproj commit          # Apply new files as symlinks
+dotproj push            # Push changes to remote
 ```
 
 ### 👥 Team Shared Flow (Git-like)
@@ -100,8 +127,8 @@ dotproj init team-project
 #    ⚠️  SECURITY: Ensure repo is PRIVATE for sensitive files!
 
 # 4. Apply and push to team
-dotproj commit team-project   # Apply files as symlinks
-dotproj push team-project     # Push to remote repo
+dotproj commit          # Auto-detects 'team-project', apply files as symlinks
+dotproj push            # Push to remote repo
 ```
 
 **Team member 2+ - Clone and use**:
@@ -117,8 +144,8 @@ dotproj clone team-project
 
 # 3. Work and sync changes
 # Edit files normally...
-dotproj push team-project     # Push your changes
-dotproj pull team-project     # Get latest team changes
+dotproj push            # Auto-detects project, push your changes
+dotproj pull            # Get latest team changes
 ```
 
 ### 🌟 Advanced Multi-Branch Workflow
@@ -137,7 +164,7 @@ dotproj clone my-project https://github.com/team/configs.git
 # → Gets frontend-specific configs (.vscode React settings, .env.local, etc.)
 
 # Switch to different branch later
-dotproj pull my-project
+dotproj pull            # Auto-detects 'my-project'
 # → Choose different branch if needed
 # → Updates to new configuration set
 ```
@@ -145,17 +172,18 @@ dotproj pull my-project
 ## 📖 Commands (Git-like Interface)
 
 ```bash
-# Essential Commands (Git-like)
+# Essential Commands (Git-like) - Project name optional when working in project directory
 dotproj init <project>           # Initialize new project (like 'git init')
 dotproj clone <project> [url]    # Clone from remote repo (like 'git clone')
-dotproj add <project>            # Add more files to track (like 'git add')
-dotproj commit <project>         # Apply files as symlinks (like 'git commit')
-dotproj status <project>         # Show tracked files and branch (like 'git status')
-dotproj push <project>           # Push changes to remote (like 'git push')
-dotproj pull <project>           # Pull latest changes from remote (like 'git pull')
+dotproj add [project]            # Add more files to track (like 'git add')
+dotproj commit [project]         # Apply files as symlinks (like 'git commit')
+dotproj status [project]         # Show tracked files and branch (like 'git status')
+dotproj push [project]           # Push changes to remote (like 'git push')
+dotproj pull [project]           # Pull latest changes from remote (like 'git pull')
 
 # Management
-dotproj list                     # Show all projects
+dotproj list                     # Show projects in current directory
+dotproj list all                 # Show all projects and their paths
 dotproj remove <project>         # Remove project completely
 
 # Setup
@@ -178,8 +206,8 @@ dotproj save <project>           # → Shows warning, runs 'status'
 ```bash
 dotproj init my-nextjs-app
 # Track: .env.local, .vscode, .cursorrules
-dotproj commit my-nextjs-app
-dotproj push my-nextjs-app
+dotproj commit          # Auto-detects 'my-nextjs-app'
+dotproj push            # Push to remote
 ```
 
 **Full-Stack with Multiple Configs**:
@@ -192,8 +220,8 @@ dotproj clone fullstack-project https://github.com/team/configs.git
 # Or create new with specific setup
 dotproj init backend-api  
 # Track: .env, .env.local, .vscode, docker-compose.yml
-dotproj commit backend-api
-dotproj push backend-api
+dotproj commit          # Auto-detects 'backend-api'
+dotproj push            # Push to remote
 ```
 
 **AI/ML with Cursor**:
@@ -314,11 +342,11 @@ cp backups/.env_local.backup .env.local  # Restore if needed
 
 **Fix broken symlinks**:
 ```bash
-dotproj status <project>      # Check integrity
-dotproj commit <project>      # Fix broken links
+dotproj status              # Check integrity (auto-detects project)
+dotproj commit              # Fix broken links
 ```
 
-> **Tip**: Use `dotproj list` to see all projects and `dotproj status <project>` to check tracked files and current branch for a specific project.
+> **Tip**: Use `dotproj list` to see projects in current directory, `dotproj list all` to see all projects, and `dotproj status` to check tracked files and current branch.
 
 
 

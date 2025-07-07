@@ -683,7 +683,8 @@
                     <span data-ty class="success">✅ Added: .prettierrc</span>
                     <span data-ty class="comment"># Apply configurations as symlinks (not literally git commit, just
                         apply the files/dotfiles)</span>
-                    <span data-ty="input">dotproj commit my-config</span>
+                    <span data-ty="input">dotproj commit</span>
+                    <span data-ty class="success">🎯 Auto-detected project: my-config</span>
                     <span data-ty class="comment">📋 Committing files/dotfiles for 'my-config'...</span>
                     <span data-ty class="success">🔗 Committed: .env.local</span>
                     <span data-ty class="success">🔗 Committed: .vscode/settings.json</span>
@@ -692,7 +693,8 @@
                     <span data-ty class="success">✅ Committed files/dotfiles for 'my-config'</span>
                     <span data-ty class="comment"># Push to remote (push the files/dotfiles to the remote
                         repository)</span>
-                    <span data-ty="input">dotproj push my-config</span>
+                    <span data-ty="input">dotproj push</span>
+                    <span data-ty class="success">🎯 Auto-detected project: my-config</span>
                     <span data-ty class="success">🚀 Pushing files/dotfiles for 'my-config'...</span>
                     <span data-ty class="success">✅ Successfully pushed to remote</span>
                     <span data-ty class="comment">✅ You can now pull the latest changes from your remote
@@ -735,7 +737,8 @@
                 <!-- File Management Workflow -->
                 <div id="management" class="termynal" style="display:none;" data-termynal data-ty-cursor="█">
                     <span data-ty class="comment"># Add more files to existing project (like 'git add')</span>
-                    <span data-ty="input">dotproj add my-config</span>
+                    <span data-ty="input">dotproj add</span>
+                    <span data-ty class="success">🎯 Auto-detected project: my-config</span>
                     <span data-ty class="comment">Currently tracked files/dotfiles:</span>
                     <span data-ty class="success">✅ .env.local</span>
                     <span data-ty class="success">✅ .vscode/settings.json</span>
@@ -745,7 +748,8 @@
                     <span data-ty class="success">✅ Added: .gitignore</span>
                     <span data-ty class="success">✅ Added: docker-compose.override.yml</span>
                     <span data-ty class="comment"># Check project status (like 'git status')</span>
-                    <span data-ty="input">dotproj status my-config</span>
+                    <span data-ty="input">dotproj status</span>
+                    <span data-ty class="success">🎯 Auto-detected project: my-config</span>
                     <span data-ty class="comment">📊 Status for project 'my-config'</span>
                     <span data-ty class="comment">Project path: /home/user/projects/my-python-app</span>
                     <span data-ty class="comment">Git repo: https://github.com/user/my-config.git</span>
@@ -754,16 +758,32 @@
                     <span data-ty class="success">✅ .vscode/settings.json</span>
                     <span data-ty class="success">✅ .eslintrc.js</span>
                     <span data-ty class="success">✅ .gitignore</span>
-                    <span data-ty class="comment"># List all projects</span>
+                    <span data-ty class="comment"># List projects in current directory</span>
                     <span data-ty="input">dotproj list</span>
-                    <span data-ty class="comment">Available projects:</span>
+                    <span data-ty class="comment">Projects in current directory
+                        (/home/user/projects/my-python-app):</span>
                     <span data-ty class="success">- my-config</span>
-                    <span data-ty class="success">- team-project</span>
+                    <span data-ty class="comment"># Example: Multiple projects in same directory</span>
+                    <span data-ty="input">cd /home/user/projects/multi-project && dotproj status</span>
+                    <span data-ty class="comment">📋 Multiple projects found in current directory:</span>
+                    <span data-ty class="success"> 1) frontend</span>
+                    <span data-ty class="success"> 2) backend</span>
+                    <span data-ty class="comment">Select project number:</span>
+                    <span data-ty="input">1</span>
+                    <span data-ty class="success">✅ Selected project: frontend</span>
+                    <span data-ty class="comment">📊 Status for project 'frontend'</span>
+                    <span data-ty class="comment"># List all projects across all directories</span>
+                    <span data-ty="input">dotproj list all</span>
+                    <span data-ty class="comment">All projects:</span>
+                    <span data-ty class="success">- my-config → /home/user/projects/my-python-app</span>
+                    <span data-ty class="success">- frontend → /home/user/projects/multi-project</span>
+                    <span data-ty class="success">- backend → /home/user/projects/multi-project</span>
                 </div>
                 <!-- Git Sync Workflow -->
                 <div id="sync" class="termynal" style="display:none;" data-termynal data-ty-cursor="█">
                     <span data-ty class="comment"># Pull latest changes from remote (like 'git pull')</span>
-                    <span data-ty="input">dotproj pull my-config</span>
+                    <span data-ty="input">dotproj pull</span>
+                    <span data-ty class="success">🎯 Auto-detected project: my-config</span>
                     <span data-ty class="comment">📥 Pulling files/dotfiles for 'my-config'...</span>
                     <span data-ty class="comment">📋 Available remote branches:</span>
                     <span data-ty class="success"> 1) dotproj-frontend ⭐ (DotProj branch)</span>
@@ -781,7 +801,8 @@
                     <span data-ty class="success">✅ Committed files/dotfiles for 'my-config'</span>
                     <span data-ty class="comment"># It will be applied to your project as symlinks.</span>
                     <span data-ty class="comment"># Push your changes (like 'git push')</span>
-                    <span data-ty="input">dotproj push my-config</span>
+                    <span data-ty="input">dotproj push</span>
+                    <span data-ty class="success">🎯 Auto-detected project: my-config</span>
                     <span data-ty class="success">🚀 Pushing files/dotfiles for 'my-config'...</span>
                     <span data-ty class="success">✅ Successfully pushed to remote</span>
                     <span data-ty class="success">✅ Push completed for 'my-config'</span>
@@ -803,6 +824,11 @@
                     setups</p>
             </div>
             <div class="feature">
+                <h3>🎯 Smart Auto-Detection</h3>
+                <p>No need to specify project names - automatically detects and prompts when multiple projects exist in
+                    current directory</p>
+            </div>
+            <div class="feature">
                 <h3>🔗 Intelligent Symlinks</h3>
                 <p>Real-time sync between project files and centralized storage - edit anywhere, update everywhere</p>
             </div>
@@ -820,7 +846,8 @@
             </div>
             <div class="feature">
                 <h3>🔧 Easy Updates</h3>
-                <p>Keep DotProj up-to-date by re-running the install script. No complex update commands needed - just fresh install</p>
+                <p>Keep DotProj up-to-date by re-running the install script. No complex update commands needed - just
+                    fresh install</p>
             </div>
         </div>
     </section>
