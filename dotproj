@@ -282,6 +282,7 @@ usage() {
   echo "  remove <project>    Remove a project and all its dotfiles"
   echo "  list                List projects for current directory"
   echo "  list all            List all projects and their paths"
+  echo "  update              Check for updates and optionally install them"
   echo "  version             Show version and system information"
   echo "Use 'dotproj <command> --help' for more details"
   exit 1
@@ -299,6 +300,49 @@ get_version() {
   else
     # Fallback to hardcoded version
     echo "1.0.0"
+  fi
+}
+
+check_for_updates() {
+  local current_version="$1"
+  
+  # Only check for updates if we have curl and internet connection
+  if ! command -v curl >/dev/null 2>&1; then
+    return 0
+  fi
+  
+  echo "🔍 Checking for updates..."
+  
+  # Try to fetch latest version from GitHub with timeout
+  local latest_version
+  latest_version=$(curl -fsSL --connect-timeout 5 --max-time 10 \
+    https://raw.githubusercontent.com/andrecrjr/dotproj/master/VERSION 2>/dev/null || echo "")
+  
+  if [ -z "$latest_version" ]; then
+    echo "  ⚠️  Unable to check for updates (network issue or GitHub unavailable)"
+    return 0
+  fi
+  
+  # Remove any whitespace/newlines from versions
+  current_version=$(echo "$current_version" | tr -d '[:space:]')
+  latest_version=$(echo "$latest_version" | tr -d '[:space:]')
+  
+  if [ "$current_version" != "$latest_version" ]; then
+    echo ""
+    echo -e "${YELLOW}🚀 Update Available!${NC}"
+    echo "════════════════════════════════════════════════════════════════"
+    echo -e "  Current version: ${RED}$current_version${NC}"
+    echo -e "  Latest version:  ${GREEN}$latest_version${NC}"
+    echo ""
+    echo "🔄 To update DotProj, run:"
+    echo -e "   ${CYAN}curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/install.sh | bash${NC}"
+    echo ""
+    echo "or download and run the installer:"
+    echo -e "   ${CYAN}wget -O install.sh https://raw.githubusercontent.com/andrecrjr/dotproj/master/install.sh${NC}"
+    echo -e "   ${CYAN}bash install.sh${NC}"
+    echo ""
+  else
+    echo -e "  ✅ You have the latest version (${GREEN}$current_version${NC})"
   fi
 }
 
@@ -325,6 +369,10 @@ version() {
   echo "📁 DotProj Paths:"
   echo "  Config: $CONFIG_FILE"
   echo "  Storage: $DOTFILES_ROOT"
+  echo ""
+  
+  # Check for updates
+  check_for_updates "$current_version"
 }
 
 command_help() {
@@ -383,9 +431,15 @@ command_help() {
       echo "dotproj list: Lists projects configured for current directory"
       echo "dotproj list all: Lists all projects and their paths"
       ;;
+    update)
+      echo "dotproj update: Check for updates and optionally install them"
+      echo "Checks GitHub for the latest version and offers to update automatically"
+      echo "Requires curl to be installed for checking and downloading updates"
+      ;;
     version)
       echo "dotproj version: Shows version and system information"
       echo "Displays DotProj version, Git status, and configuration paths"
+      echo "Also checks for available updates from GitHub"
       ;;
     *)
       usage
@@ -1318,6 +1372,95 @@ list() {
   fi
 }
 
+update() {
+  local current_version
+  current_version=$(get_version)
+  
+  echo "🔄 DotProj Update Check"
+  echo "════════════════════════════════════════════════════════════════"
+  echo "Current version: $current_version"
+  echo ""
+  
+  # Only check for updates if we have curl
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "❌ curl is required to check for updates but not installed."
+    echo ""
+    echo "📦 Please install curl first:"
+    echo "  • Ubuntu/Debian: sudo apt update && sudo apt install curl"
+    echo "  • CentOS/RHEL:   sudo yum install curl"
+    echo "  • Fedora:        sudo dnf install curl"
+    echo "  • macOS:         curl is usually pre-installed"
+    echo "  • Arch Linux:    sudo pacman -S curl"
+    exit 1
+  fi
+  
+  echo "🔍 Checking GitHub for latest version..."
+  
+  # Try to fetch latest version from GitHub with timeout
+  local latest_version
+  latest_version=$(curl -fsSL --connect-timeout 5 --max-time 10 \
+    https://raw.githubusercontent.com/andrecrjr/dotproj/master/VERSION 2>/dev/null || echo "")
+  
+  if [ -z "$latest_version" ]; then
+    echo "❌ Unable to check for updates"
+    echo ""
+    echo "Possible causes:"
+    echo "  • No internet connection"
+    echo "  • GitHub is unavailable"
+    echo "  • Firewall blocking the request"
+    echo ""
+    echo "Try again later or check manually at:"
+    echo "  https://github.com/andrecrjr/dotproj"
+    exit 1
+  fi
+  
+  # Remove any whitespace/newlines from versions
+  current_version=$(echo "$current_version" | tr -d '[:space:]')
+  latest_version=$(echo "$latest_version" | tr -d '[:space:]')
+  
+  if [ "$current_version" != "$latest_version" ]; then
+    echo ""
+    echo -e "${YELLOW}🚀 Update Available!${NC}"
+    echo "════════════════════════════════════════════════════════════════"
+    echo -e "  Current version: ${RED}$current_version${NC}"
+    echo -e "  Latest version:  ${GREEN}$latest_version${NC}"
+    echo ""
+    echo -n "Would you like to update now? (y/N): "
+    read -r update_choice
+    
+    if [ "$update_choice" = "y" ] || [ "$update_choice" = "Y" ]; then
+      echo ""
+      echo "🔄 Updating DotProj..."
+      echo "════════════════════════════════════════════════════════════════"
+      
+      # Download and run the installer
+      if curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/install.sh | bash; then
+        echo ""
+        echo -e "${GREEN}✅ Update completed successfully!${NC}"
+        echo ""
+        echo "🎉 DotProj has been updated to version $latest_version"
+        echo "   Run 'dotproj version' to verify the update"
+      else
+        echo ""
+        echo -e "${RED}❌ Update failed${NC}"
+        echo ""
+        echo "You can try updating manually:"
+        echo -e "  ${CYAN}curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/install.sh -o install.sh${NC}"
+        echo -e "  ${CYAN}bash install.sh${NC}"
+        exit 1
+      fi
+    else
+      echo ""
+      echo "Update cancelled. To update later, run:"
+      echo -e "  ${CYAN}dotproj update${NC}"
+    fi
+  else
+    echo -e "✅ You have the latest version (${GREEN}$current_version${NC})"
+    echo ""
+    echo "No update needed! 🎉"
+  fi
+}
+
 case "$CMD" in
   setup)
     [ "$2" = "--help" ] && command_help setup
@@ -1358,6 +1501,10 @@ case "$CMD" in
   list)
     [ "$2" = "--help" ] && command_help list
     list "$2"
+    ;;
+  update)
+    [ "$2" = "--help" ] && command_help update
+    update
     ;;
   version)
     version
