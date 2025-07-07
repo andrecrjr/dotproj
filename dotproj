@@ -199,13 +199,14 @@ usage() {
   echo "  setup               Install DotProj and add to PATH"
   echo "  init <project>      Initialize dotfiles for a project"
   echo "  clone <project>     Clone from a remote repository and commit dotfiles"
-  echo "  add <project>       Add more dotfiles to an existing project"
-  echo "  commit <project>    Apply dotfiles as symlinks to the current environment"
-  echo "  status <project>    Show tracked and excluded dotfiles for a project"
-  echo "  push <project>      Commit and push dotfiles to Git repository"
-  echo "  pull <project>      Pull latest dotfiles from Git repository"
+  echo "  add [project]       Add more dotfiles to an existing project"
+  echo "  commit [project]    Apply dotfiles as symlinks to the current environment"
+  echo "  status [project]    Show tracked and excluded dotfiles for a project"
+  echo "  push [project]      Commit and push dotfiles to Git repository"
+  echo "  pull [project]      Pull latest dotfiles from Git repository"
   echo "  remove <project>    Remove a project and all its dotfiles"
-  echo "  list                List all projects"
+  echo "  list                List projects for current directory"
+  echo "  list all            List all projects and their paths"
   echo "  version             Show version and system information"
   echo "Use 'dotproj <command> --help' for more details"
   exit 1
@@ -273,35 +274,41 @@ command_help() {
       echo "If multiple branches exist, you can choose which one to restore from"
       ;;
     add)
-      echo "dotproj add <project>: Add more files/dotfiles to an existing project"
+      echo "dotproj add [project]: Add more files/dotfiles to an existing project"
       echo "Allows you to track additional dotfiles using comma-separated input"
+      echo "If no project specified, auto-detects from current directory"
       ;;
     commit)
-      echo "dotproj commit <project>: Apply files/dotfiles to the environment"
+      echo "dotproj commit [project]: Apply files/dotfiles to the environment"
       echo "Creates symlinks from project locations to stored dotfiles"
       echo "Similar to 'git commit' - applies your tracked changes"
+      echo "If no project specified, auto-detects from current directory"
       ;;
     status)
-      echo "dotproj status <project>: Shows tracked files/dotfiles for a project"
+      echo "dotproj status [project]: Shows tracked files/dotfiles for a project"
       echo "Displays which files are being managed"
+      echo "If no project specified, auto-detects from current directory"
       ;;
     push)
-      echo "dotproj push <project>: Push files/dotfiles to Git repository"
+      echo "dotproj push [project]: Push files/dotfiles to Git repository"
       echo "Commits local changes and pushes to remote repo (if configured)"
       echo "Similar to 'git push' - syncs your changes to remote"
+      echo "If no project specified, auto-detects from current directory"
       ;;
     pull)
-      echo "dotproj pull <project>: Pull latest files/dotfiles from Git repository"
+      echo "dotproj pull [project]: Pull latest files/dotfiles from Git repository"
       echo "Fetches and merges changes from remote repo (if configured)"
       echo "Similar to 'git pull' - gets latest changes from remote"
       echo "If multiple remote branches exist, you can choose which one to pull from"
+      echo "If no project specified, auto-detects from current directory"
       ;;
     remove)
       echo "dotproj remove <project>: Remove a project and all its files/dotfiles"
       echo "Permanently deletes the project storage directory"
       ;;
     list)
-      echo "dotproj list: Lists all initialized projects"
+      echo "dotproj list: Lists projects configured for current directory"
+      echo "dotproj list all: Lists all projects and their paths"
       ;;
     version)
       echo "dotproj version: Shows version and system information"
@@ -314,10 +321,69 @@ command_help() {
   exit 0
 }
 
+get_current_directory_projects() {
+  local current_dir="$PWD"
+  local projects=""
+  
+  if [ ! -f "$CONFIG_FILE" ]; then
+    return 1
+  fi
+  
+  while IFS= read -r line; do
+    if [[ "$line" == *":dotfiles:"* ]]; then
+      local proj
+      proj=$(echo "$line" | cut -d':' -f1)
+      local proj_path
+      proj_path=$(get_project_config "$proj" "path")
+      if [ "$proj_path" = "$current_dir" ]; then
+        if [ -z "$projects" ]; then
+          projects="$proj"
+        else
+          projects="$projects,$proj"
+        fi
+      fi
+    fi
+  done < "$CONFIG_FILE"
+  
+  echo "$projects"
+}
+
 check_project() {
   if [ -z "$PROJECT" ]; then
-    echo "Error: Project name required"
-    usage
+    local current_projects
+    current_projects=$(get_current_directory_projects)
+    
+    if [ -z "$current_projects" ]; then
+      echo "❌ No projects found in current directory ($PWD)"
+      echo "💡 Available options:"
+      echo "   • Run 'dotproj init <project>' to create a new project"
+      echo "   • Run 'dotproj list all' to see all projects"
+      echo "   • Navigate to a directory with existing projects"
+      exit 1
+    fi
+    
+    # Count projects (count commas + 1)
+    local project_count
+    project_count=$(echo "$current_projects" | tr ',' '\n' | wc -l)
+    
+    if [ "$project_count" -eq 1 ]; then
+      PROJECT="$current_projects"
+      echo "🎯 Auto-detected project: $PROJECT"
+    else
+      echo "📋 Multiple projects found in current directory:"
+      echo "$current_projects" | tr ',' '\n' | nl -w2 -s') '
+      echo ""
+      echo -n "Select project number: "
+      read -r choice
+      
+      if [ -n "$choice" ] && [ "$choice" -gt 0 ] && [ "$choice" -le "$project_count" ]; then
+        PROJECT=$(echo "$current_projects" | tr ',' '\n' | sed -n "${choice}p")
+        echo "✅ Selected project: $PROJECT"
+      else
+        echo "❌ Invalid selection"
+        exit 1
+      fi
+    fi
   fi
 }
 
@@ -1083,13 +1149,44 @@ status() {
 }
 
 list() {
-  if [ -f "$CONFIG_FILE" ]; then
-    echo "Available projects:"
+  local show_all="$1"
+  local current_dir="$PWD"
+  
+  if [ ! -f "$CONFIG_FILE" ]; then
+    echo "No projects found. Run 'dotproj init <project>' to create one."
+    return
+  fi
+
+  if [ "$show_all" = "all" ]; then
+    echo "All projects:"
     grep '^[^:]*:dotfiles:' "$CONFIG_FILE" | cut -d':' -f1 | sort -u | while read -r proj; do
-      echo "- $proj"
+      local proj_path
+      proj_path=$(get_project_config "$proj" "path")
+      echo "- $proj → $proj_path"
     done
   else
-    echo "No projects found. Run 'dotproj init <project>' to create one."
+    echo "Projects in current directory ($current_dir):"
+    local found_projects=0
+    grep '^[^:]*:dotfiles:' "$CONFIG_FILE" | cut -d':' -f1 | sort -u | while read -r proj; do
+      local proj_path
+      proj_path=$(get_project_config "$proj" "path")
+      if [ "$proj_path" = "$current_dir" ]; then
+        echo "- $proj"
+        found_projects=$((found_projects + 1))
+      fi
+    done
+    
+    # Check if no projects found in current directory
+    if ! grep '^[^:]*:dotfiles:' "$CONFIG_FILE" | cut -d':' -f1 | sort -u | while read -r proj; do
+      local proj_path
+      proj_path=$(get_project_config "$proj" "path")
+      if [ "$proj_path" = "$current_dir" ]; then
+        exit 0  # Found at least one
+      fi
+    done; then
+      echo "No projects configured for current directory."
+      echo "Use 'dotproj list all' to see all projects."
+    fi
   fi
 }
 
@@ -1134,7 +1231,7 @@ case "$CMD" in
     ;;
   list)
     [ "$2" = "--help" ] && command_help list
-    list
+    list "$2"
     ;;
   version)
     version

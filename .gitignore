@@ -24,3 +24,4 @@ Thumbs.db
 # Test files
 test_*
 tests/
+.cursor
