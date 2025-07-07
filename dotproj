@@ -207,7 +207,6 @@ usage() {
   echo "  remove <project>    Remove a project and all its dotfiles"
   echo "  list                List all projects"
   echo "  version             Show version and system information"
-  echo "  update              Check for and install DotProj updates"
   echo "Use 'dotproj <command> --help' for more details"
   exit 1
 }
@@ -227,44 +226,7 @@ get_version() {
   fi
 }
 
-check_for_updates() {
-  local current_version="$1"
-  local check_only="${2:-false}"
-  
-  if command -v curl >/dev/null 2>&1; then
-    echo ""
-    echo "🔍 Checking for updates..."
-    
-    # Try to get latest version from GitHub
-    local latest_version
-    latest_version=$(curl -s "https://raw.githubusercontent.com/andrecrjr/dotproj/master/VERSION" 2>/dev/null || echo "")
-    
-    if [ -n "$latest_version" ] && [ "$latest_version" != "$current_version" ]; then
-      echo "📦 Update available: $current_version → $latest_version"
-      echo ""
-      if [ "$check_only" = "false" ]; then
-        echo "💡 To update DotProj, run:"
-        echo "   bash <(curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/update.sh)"
-        echo ""
-        echo "   Or download the update script:"
-        echo "   curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/update.sh -o update.sh"
-        echo "   chmod +x update.sh && ./update.sh"
-      fi
-    elif [ -n "$latest_version" ]; then
-      if [ "$check_only" = "true" ]; then
-        echo "✅ DotProj is up to date (version $current_version)"
-      fi
-    else
-      if [ "$check_only" = "true" ]; then
-        echo "⚠️  Could not check for updates (network issue or repository unavailable)"
-      fi
-    fi
-  else
-    if [ "$check_only" = "true" ]; then
-      echo "⚠️  curl not available - cannot check for updates"
-    fi
-  fi
-}
+
 
 version() {
   local current_version
@@ -289,9 +251,6 @@ version() {
   echo "📁 DotProj Paths:"
   echo "  Config: $CONFIG_FILE"
   echo "  Storage: $DOTFILES_ROOT"
-  
-  # Check for updates
-  check_for_updates "$current_version" "false"
 }
 
 command_help() {
@@ -347,14 +306,6 @@ command_help() {
     version)
       echo "dotproj version: Shows version and system information"
       echo "Displays DotProj version, Git status, and configuration paths"
-      echo "Use 'dotproj update' to check for updates"
-      ;;
-    update)
-      echo "dotproj update: Check for and install DotProj updates"
-      echo "Downloads and runs the update script to install the latest version"
-      echo "Options:"
-      echo "  --check    Only check for updates without installing"
-      echo "  --force    Force update even if already up to date"
       ;;
     *)
       usage
@@ -411,12 +362,6 @@ setup() {
   if [ -f "$script_dir/VERSION" ] && [ ! -f "$HOME/.dotproj/VERSION" ]; then
     echo "Installing version information..."
     cp "$script_dir/VERSION" "$HOME/.dotproj/VERSION"
-  fi
-
-  # Install update.sh if it exists alongside the script
-  if [ -f "$script_dir/update.sh" ] && [ ! -f "$HOME/.dotproj/update.sh" ]; then
-    echo "Installing update script..."
-    cp "$script_dir/update.sh" "$HOME/.dotproj/update.sh"
   fi
 
   # Add to PATH if not already there
@@ -1148,87 +1093,7 @@ list() {
   fi
 }
 
-update() {
-  local check_only=false
-  local force_update=false
-  
-  # Parse options
-  while [[ $# -gt 0 ]]; do
-    case $1 in
-      --check)
-        check_only=true
-        shift
-        ;;
-      --force)
-        force_update=true
-        shift
-        ;;
-      *)
-        echo "Unknown option: $1"
-        echo "Use 'dotproj update --help' for usage information"
-        exit 1
-        ;;
-    esac
-  done
-  
-  if [ "$check_only" = "true" ]; then
-    local current_version
-    current_version=$(get_version)
-    echo "🔍 Checking for DotProj updates..."
-    echo "Current version: $current_version"
-    check_for_updates "$current_version" "true"
-    return
-  fi
-  
-  echo "🔄 DotProj Update Manager"
-  echo "════════════════════════════════════════════════════════════════"
-  echo ""
-  
-  # Check if curl is available
-  if ! command -v curl >/dev/null 2>&1; then
-    echo "❌ curl is required for updates but not installed."
-    echo ""
-    echo "📦 Please install curl first:"
-    echo "  • Ubuntu/Debian: sudo apt update && sudo apt install curl"
-    echo "  • CentOS/RHEL:   sudo yum install curl"
-    echo "  • Fedora:        sudo dnf install curl"
-    echo "  • macOS:         curl is usually pre-installed"
-    echo "  • Arch Linux:    sudo pacman -S curl"
-    echo ""
-    echo "After installing curl, run 'dotproj update' again."
-    exit 1
-  fi
-  
-  echo "📥 Downloading update script..."
-  local temp_script
-  temp_script=$(mktemp)
-  
-  if ! curl -fsSL "https://raw.githubusercontent.com/andrecrjr/dotproj/master/update.sh" -o "$temp_script"; then
-    echo "❌ Failed to download update script"
-    echo ""
-    echo "Please check:"
-    echo "  - Your internet connection"
-    echo "  - Repository availability"
-    echo "  - Try again later"
-    rm -f "$temp_script"
-    exit 1
-  fi
-  
-  chmod +x "$temp_script"
-  
-  echo "🚀 Running update script..."
-  echo ""
-  
-  # Run the update script with appropriate flags
-  if [ "$force_update" = "true" ]; then
-    "$temp_script" --force
-  else
-    "$temp_script"
-  fi
-  
-  # Clean up
-  rm -f "$temp_script"
-}
+
 
 case "$CMD" in
   setup)
@@ -1273,11 +1138,6 @@ case "$CMD" in
     ;;
   version)
     version
-    ;;
-  update)
-    [ "$2" = "--help" ] && command_help update
-    shift  # Remove 'update' from arguments
-    update "$@"
     ;;
   # Legacy command support with deprecation warnings
   apply)

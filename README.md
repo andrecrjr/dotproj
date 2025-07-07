@@ -158,10 +158,9 @@ dotproj pull <project>           # Pull latest changes from remote (like 'git pu
 dotproj list                     # Show all projects
 dotproj remove <project>         # Remove project completely
 
-# Setup & Updates
+# Setup
 dotproj setup                    # Install dotproj
-dotproj version                  # Show version and check for updates
-dotproj update                   # Update to latest version
+dotproj version                  # Show version and system information
 ```
 
 ### 🔄 Legacy Commands (Deprecated but supported)
@@ -321,67 +320,7 @@ dotproj commit <project>      # Fix broken links
 
 > **Tip**: Use `dotproj list` to see all projects and `dotproj status <project>` to check tracked files and current branch for a specific project.
 
-## 🔄 Updates & Versioning
 
-DotProj follows [Semantic Versioning](https://semver.org/) and provides multiple ways to stay up to date.
-
-### Check Current Version
-```bash
-dotproj version                  # Shows version + checks for updates
-```
-
-### Update DotProj
-
-**Method 1: Built-in update command (Recommended)**
-```bash
-dotproj update                   # Check and install updates
-dotproj update --check           # Only check for updates
-dotproj update --force           # Force reinstall latest version
-```
-
-**Method 2: Direct update script**
-```bash
-# One-liner update
-bash <(curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/update.sh)
-
-# Download and run
-curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/update.sh -o update.sh
-chmod +x update.sh
-./update.sh
-```
-
-**Method 3: Reinstall from scratch**
-```bash
-# Fresh installation (overwrites existing)
-bash <(curl -fsSL https://raw.githubusercontent.com/andrecrjr/dotproj/master/install.sh)
-```
-
-### Update Features
-
-- **🔍 Automatic version checking**: `dotproj version` shows available updates
-- **📦 Safe updates**: Automatic backup of current version before updating
-- **🔄 Rollback support**: Failed updates automatically rollback to previous version
-- **📋 Changelog display**: Shows recent changes during update process
-- **✅ Verification**: Post-update verification ensures installation success
-
-### Version History
-
-See [CHANGELOG.md](CHANGELOG.md) for detailed version history and changes.
-
-### Release Schedule
-
-- **Patch releases** (1.0.x): Bug fixes, security updates
-- **Minor releases** (1.x.0): New features, improvements
-- **Major releases** (x.0.0): Breaking changes, major overhauls
-
-### Staying Updated
-
-**Recommended**: Run `dotproj version` periodically to check for updates, or enable notifications in your shell profile:
-
-```bash
-# Add to ~/.bashrc or ~/.zshrc for update reminders
-alias dotproj-check='dotproj update --check'
-```
 
 ## 📄 License
 
